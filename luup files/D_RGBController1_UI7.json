@@ -1,0 +1,202 @@
+{
+	"default_icon": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_off.png",
+	"state_icons": [
+		{
+			"img": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_off.png",
+			"conditions": [
+				{
+					"service": "urn:upnp-org:serviceId:SwitchPower1",
+					"variable": "Status",
+					"operator": "==",
+					"value": 0
+				}
+			]
+		},
+		{
+			"img": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_on.png",
+			"conditions": [
+				{
+					"service": "urn:upnp-org:serviceId:SwitchPower1",
+					"variable": "Status",
+					"operator": "==",
+					"value": 1
+				}
+			]
+		}
+	],
+	"x":"2",
+	"y":"2",
+	"inScene": "1",
+	"doc_url":{
+		"doc_forced_url":{
+			"text":"http://forum.micasaverde.com/"
+		}
+	},
+	"Tabs":[
+		{
+			"Label": {
+				"lang_tag": "ui7_tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"TopNavigationTab": "1",
+			"SceneGroup": [
+				{
+					"id": "1",
+					"top": "0",
+					"left": "2",
+					"x": "1",
+					"y": "1"
+				},
+				{
+					"id": "2",
+					"top": "0",
+					"left": "0",
+					"x": "2",
+					"y": "1"
+				}
+			],
+			"ControlGroup": [
+				{
+					"id": "1",
+					"isSingle": "1",
+					"scenegroup": "1"
+				},
+				{
+					"id": "2",
+					"isSingle": "1",
+					"scenegroup": "2"
+				},
+				{
+					"id": "3",
+					"isSingle": "1",
+					"scenegroup": "2"
+				}
+			],
+			"Control": [
+				{
+					"ControlGroup": "1",
+					"ControlType": "multi_state_button",
+					"top": "0",
+					"left": "0",
+					"states": [
+						{
+							"Label": {
+								"lang_tag": "ui7_off",
+								"text": "OFF"
+							},
+							"ControlGroup": "1",
+							"Display": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Variable": "Status",
+								"Value": "0"
+							},
+							"Command": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Action": "SetTarget",
+								"Parameters": [
+									{
+										"Name": "newTargetValue",
+										"Value": "0"
+									}
+								]
+							},
+							"ControlCode": "rgbcontroller_power_off"
+						},
+						{
+							"Label": {
+								"lang_tag": "ui7_on",
+								"text": "ON"
+							},
+							"ControlGroup": "1",
+							"Display": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Variable": "Status",
+								"Value": "1"
+							},
+							"Command": {
+								"Service": "urn:upnp-org:serviceId:SwitchPower1",
+								"Action": "SetTarget",
+								"Parameters": [
+									{
+										"Name": "newTargetValue",
+										"Value": "1"
+									}
+								]
+							},
+							"ControlCode": "rgbcontroller_power_on"
+						}
+					],
+					"Display": {
+						"Top": 0,
+						"Left": 0
+					}
+				},
+				{
+					"ControlGroup": "2",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "rgbcontroller_color",
+						"text": "Color"
+					},
+					"Display": {
+						"Top": 0,
+						"Left": 150
+					}
+				},
+				{
+					"ControlGroup": "3",
+					"ControlType": "variable",
+					"top": "0",
+					"left": "1",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Variable": "Color",
+						"Top": 0,
+						"Left": 200,
+						"Width": 100,
+						"Height": 20
+					}
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "RGBController_colorWheel",
+				"text": "Color wheel"
+			},
+			"Position": "1",
+			"TopNavigationTab": "1",
+			"TabType": "javascript",
+			"ScriptName": "J_RGBController1.js",
+			"Function": "RGBController.showColorWheel"
+		},
+		{
+			"Label": {
+				"lang_tag": "settings",
+				"text": "Settings"
+			},
+			"Position": "2",
+			"TopNavigationTab": "1",
+			"TabType": "javascript",
+			"ScriptName": "J_RGBController1.js",
+			"Function": "RGBController.showSettings"
+		},
+		{
+			"Label":{
+				"lang_tag":"advanced",
+				"text":"Advanced"
+			},
+			"Position":"3",
+			"TabType":"javascript",
+			"ScriptName":"shared.js",
+			"Function":"advanced_device"
+		}
+	],
+	"eventList2":[
+	],
+	"DeviceType":"urn:schemas-upnp-org:device:RGBController:1"
+}

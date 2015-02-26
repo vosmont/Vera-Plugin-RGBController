@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<implementation>
+	<files>L_RGBController1.lua</files>
+	<startup>startup</startup>
+	<actionList>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+			<name>SetTarget</name>
+			<run>
+				return setTarget(lul_device, lul_settings.newTargetValue)
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>SetTarget</name>
+			<run>
+				return setTarget(lul_device, lul_settings.newTargetValue)
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>SetColor</name>
+			<run>
+				return setColorTarget(lul_device, lul_settings.newColor)
+			</run>
+			<jobname>state-toggle</jobname>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>SetColorTarget</name>
+			<run>
+				return setColorTarget(lul_device, lul_settings.newColorTargetValue)
+			</run>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>StartAnimationProgram</name>
+			<run>
+				return startAnimationProgram(lul_device, lul_settings.programId)
+			</run>
+		</action>
+	</actionList>
+</implementation>
+ 
