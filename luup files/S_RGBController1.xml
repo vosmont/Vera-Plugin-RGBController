@@ -12,19 +12,6 @@
 			<defaultValue>0</defaultValue>
 		</stateVariable>
 		<stateVariable>
-			<name>Target</name>
-			<sendEventsAttribute>no</sendEventsAttribute>
-			<dataType>boolean</dataType>
-			<defaultValue>0</defaultValue>
-		</stateVariable>
-		<stateVariable>
-			<name>Status</name>
-			<sendEventsAttribute>yes</sendEventsAttribute>
-			<dataType>boolean</dataType>
-			<defaultValue>0</defaultValue>
-			<shortCode>status</shortCode>
-		</stateVariable>
-		<stateVariable>
 			<name>Color</name>
 			<sendEventsAttribute>yes</sendEventsAttribute>
 			<dataType>string</dataType>
@@ -52,18 +39,14 @@
 			<defaultValue>e4</defaultValue>
 			<shortCode>bluealias</shortCode>
 		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_programId</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui1</dataType>
+			<defaultValue>0</defaultValue>
+		</stateVariable>
 	</serviceStateTable>
 	<actionList>
-		<action>
-			<name>SetTarget</name>
-			<argumentList>
-				<argument>
-					<name>newTargetValue</name>
-					<direction>in</direction>
-					<relatedStateVariable>Status</relatedStateVariable>
-				</argument>
-			</argumentList>
-		</action>
 		<action>
 			<name>SetColor</name>
 			<argumentList>
@@ -90,6 +73,7 @@
 				<argument>
 					<name>programId</name>
 					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_programId</relatedStateVariable>
 				</argument>
 			</argumentList>
 		</action>

@@ -7,14 +7,19 @@ var RGBController = (function (api, $) {
 	var myModule = {};
 
 	// Inject plugin specific CSS rules
-	$("<style>")
-		.prop("type", "text/css")
-		.html("\
+	var pluginStyle = $("<style>");
+	if ($.fn.jquery == "1.5") {
+		pluginStyle.attr("type", "text/css");
+	} else {
+		pluginStyle.prop("type", "text/css");
+	}
+	pluginStyle.html("\
 			#RGBController_colorWheel { width: 400px; height: 400px; margin: 20px auto; }\
 			#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
 			#RGBController_sliders { display: inline-block; margin-left: 50px; } \
 			#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
 			#RGBController_sliders .ui-slider-vertical { border-radius: 25px; }\
+			#RGBController_sliders .ui-slider-handle { width: 25px; }\
 			#RGBController_red .ui-slider-range, #RGBController_red .ui-slider-handle { background-color: #ef2929 !important; }\
 			#RGBController_green .ui-slider-range, #RGBController_green .ui-slider-handle { background-color: #8ae234 !important; }\
 			#RGBController_blue .ui-slider-range, #RGBController_blue .ui-slider-handle { background-color: #729fcf !important; }\

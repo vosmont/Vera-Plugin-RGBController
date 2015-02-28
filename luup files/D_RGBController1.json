@@ -1,15 +1,14 @@
 {
-	"flashicon":"icons/iconRGBController.png",
-	"default_icon": "icons/iconRGBController.png",
+	"flashicon": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller.png",
 	"state_icons": [
-		"iconRGBController_0.png",
-		"iconRGBController_100.png"
+		"rgb_controller_0.png",
+		"rgb_controller_100.png"
 	],
 	"x":"2",
 	"y":"2",
 	"inScene": "1",
 	"DisplayStatus": {
-		"Service": "urn:upnp-org:serviceId:RGBController1",
+		"Service": "urn:upnp-org:serviceId:SwitchPower1",
 		"Variable": "Status",
 		"MinValue": "0",
 		"MaxValue": "1"
@@ -64,7 +63,7 @@
 						"text": "Off"
 					},
 					"Display": {
-						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
 						"Variable": "Status",
 						"Value": "0",
 						"Top": 60,
@@ -73,7 +72,7 @@
 						"Height": 20
 					},
 					"Command": {
-						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
 						"Action": "SetTarget",
 						"Parameters": [
 							{
@@ -94,7 +93,7 @@
 						"text": "On"
 					},
 					"Display": {
-						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
 						"Variable": "Status",
 						"Value": "1",
 						"Top": 60,
@@ -103,7 +102,7 @@
 						"Height": 20
 					},
 					"Command": {
-						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Service": "urn:upnp-org:serviceId:SwitchPower1",
 						"Action": "SetTarget",
 						"Parameters": [
 							{
@@ -162,44 +161,6 @@
 		}
 	],
 	"eventList2":[
-		{
-			"id": 1,
-			"label": {
-				"lang_tag": "a_device_is_turned_on_off",
-				"text": "A device is turned on or off"
-			},
-			"serviceId": "urn:upnp-org:serviceId:RGBController1",
-			"argumentList": [
-				{
-					"id": 1,
-					"dataType": "boolean",
-					"defaultValue": "1",
-					"allowedValueList": [
-						{
-							"Off": "0",
-							"HumanFriendlyText": {
-								"lang_tag": "hft_device_turned_off",
-								"text": "_DEVICE_NAME_ is turned off"
-							}
-						},
-						{
-							"On": "1",
-							"HumanFriendlyText": {
-								"lang_tag": "hft_device_turned_on",
-								"text": "_DEVICE_NAME_ is turned on"
-							}
-						}
-					],
-					"name": "Status",
-					"comparisson": "=",
-					"prefix": {
-						"lang_tag": "which_mode",
-						"text": "Which mode"
-					},
-					"suffix": {}
-				}
-			]
-		}
 	],
 	"DeviceType":"urn:schemas-upnp-org:device:RGBController:1",
 	"device_type":"urn:schemas-upnp-org:device:RGBController:1"

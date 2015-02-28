@@ -23,12 +23,14 @@ local function checkStaticJSONFile (pluginName)
 		luup.log("ERROR - Plugin '" .. pluginName .. "' - checkStaticJSONFile : don't know how to do with this version branch " .. tostring(luup.version_branch), 1)
 		return
 	end
-	local currentStaticJsonFile = luup.attr_get("device_json", lul_device)
-	local expectedStaticJsonFile = "D_" .. pluginName .. "_UI" .. tostring(luup.version_major) .. ".json"
-	if (currentStaticJsonFile ~= expectedStaticJsonFile) then
-		luup.attr_set("device_json", expectedStaticJsonFile, lul_device)
-		luup.log("Plugin '" .. pluginName .. "' - 'device_json' has been updated : reload LUUP engine")
-		luup.reload()
+	if (luup.version_major > 5) then
+		local currentStaticJsonFile = luup.attr_get("device_json", lul_device)
+		local expectedStaticJsonFile = "D_" .. pluginName .. "_UI" .. tostring(luup.version_major) .. ".json"
+		if (currentStaticJsonFile ~= expectedStaticJsonFile) then
+			luup.attr_set("device_json", expectedStaticJsonFile, lul_device)
+			luup.log("Plugin '" .. pluginName .. "' - 'device_json' has been updated : reload LUUP engine")
+			luup.reload()
+		end
 	end
 end
 
@@ -203,36 +205,45 @@ function setColorTarget (lul_device, newColor)
 	end
 
 	-- Compute device status
-	--local status = luup.variable_get(SID_RGBController, "Status", lul_device)
 	local status = luup.variable_get(SID_SwitchPower, "Status", lul_device)
 	if ((newColor == "00000000") and (status == "1")) then
-		--luup.variable_set(SID_RGBController, "Status", "0", lul_device)
 		luup.variable_set(SID_SwitchPower, "Status", "0", lul_device)
 	elseif (status == "0") then
-		--luup.variable_set(SID_RGBController, "Status", "1", lul_device)
 		luup.variable_set(SID_SwitchPower, "Status", "1", lul_device)
 	end
 
 	-- Set new color
 	debug("setColorTarget", "Set color RGBW #" .. newColor)
+
 	-- DEPRECATED : Vera FGRGB implementation is buggy. Lags on color change.
 	--setLoadLevelFromHexColor(lul_device, "red",   newColor:sub(1, 2))
 	--setLoadLevelFromHexColor(lul_device, "green", newColor:sub(3, 4))
 	--setLoadLevelFromHexColor(lul_device, "blue",  newColor:sub(5, 6))
 	--setLoadLevelFromHexColor(lul_device, "white", newColor:sub(7, 8))
-	local data = "0x33 0x05 0x06"
-	data = data .. " " .. getDataToSendFromHexColor(lul_device, "red",   newColor:sub(1, 2))
-	data = data .. " " .. getDataToSendFromHexColor(lul_device, "green", newColor:sub(3, 4))
-	data = data .. " " .. getDataToSendFromHexColor(lul_device, "blue",  newColor:sub(5, 6))
-	luup.call_action(SID_ZWaveNetwork, "SendData", {Node = pluginParams.rgbZwaveNode, Data = data}, 1)
-	-- ARRRRR !!! the white color is not set with the multi Zwave command !
-	data = "0x33 0x05 0x02 " .. getDataToSendFromHexColor(lul_device, "white", newColor:sub(7, 8))
-	luup.call_action(SID_ZWaveNetwork, "SendData", {Node = pluginParams.rgbZwaveNode, Data = data}, 1)
-	
-	local newWhiteColor = newColor:sub(7, 8)
-	if (newWhiteColor ~= oldColor:sub(7, 8)) then
-		setLoadLevelFromHexColor(lul_device, "white", newWhiteColor)
+
+	local data
+
+	local newRGBColor = newColor:sub(1, 6)
+	if (newRGBColor ~= oldColor:sub(1, 6)) then
+		--data = "0x33 0x05 0x06"
+		data = "0x33 0x05 0x08"
+		data = data .. " " .. getDataToSendFromHexColor(lul_device, "white", newColor:sub(7, 8))
+		data = data .. " " .. getDataToSendFromHexColor(lul_device, "red",   newColor:sub(1, 2))
+		data = data .. " " .. getDataToSendFromHexColor(lul_device, "green", newColor:sub(3, 4))
+		data = data .. " " .. getDataToSendFromHexColor(lul_device, "blue",  newColor:sub(5, 6))
+		debug("setColorTarget", "Set RGB color #" .. newRGBColor)
+		luup.call_action(SID_ZWaveNetwork, "SendData", {Node = pluginParams.rgbZwaveNode, Data = data}, 1)
 	end
+
+	-- The white color is not set with the multi Zwave command, have to do it separately
+	-- For an obvious reason, setting RGB color, sets white color to 0.
+	local newWhiteColor = newColor:sub(7, 8)
+	--if (newWhiteColor ~= oldColor:sub(7, 8)) then
+		--setLoadLevelFromHexColor(lul_device, "white", newWhiteColor)
+		data = "0x33 0x05 0x02 " .. getDataToSendFromHexColor(lul_device, "white", newColor:sub(7, 8))
+		debug("setColorTarget", "Set white color #" .. newWhiteColor)
+		luup.call_action(SID_ZWaveNetwork, "SendData", {Node = pluginParams.rgbZwaveNode, Data = data}, 1)
+	--end
 
 	return true
 end
@@ -243,12 +254,12 @@ function setTarget (lul_device, newTargetValue)
 
 	debug("setTarget", "Set device status : " .. tostring(newTargetValue))
 	if (tostring(newTargetValue) == "1") then
-		luup.call_action(SID_Dimming, "SetLoadLevelTarget", {newLoadlevelTarget = "100"}, pluginParams.rgbDeviceId)
-		--luup.variable_set(SID_RGBController, "Status", "1", lul_device)
+		--luup.call_action(SID_Dimming, "SetLoadLevelTarget", {newLoadlevelTarget = "100"}, pluginParams.rgbDeviceId)
+		luup.call_action(SID_SwitchPower, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
 		luup.variable_set(SID_SwitchPower, "Status", "1", lul_device)
 	else
-		luup.call_action(SID_Dimming, "SetLoadLevelTarget", {newLoadlevelTarget = "0"}, pluginParams.rgbDeviceId)
-		--luup.variable_set(SID_RGBController, "Status", "0", lul_device)
+		--luup.call_action(SID_Dimming, "SetLoadLevelTarget", {newLoadlevelTarget = "0"}, pluginParams.rgbDeviceId)
+		luup.call_action(SID_SwitchPower, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
 		luup.variable_set(SID_SwitchPower, "Status", "0", lul_device)
 	end
 
