@@ -2,8 +2,13 @@
 
 var RGBController = (function (api, $) {
 
-	var uuid = 'ToBeDefined';
-	var RGBCONTROLLER_SID = 'urn:upnp-org:serviceId:RGBController1';
+	var uuid = 'e76e1855-ea23-46c0-8dda-4b1a9d852bc6';
+	var RGB_CONTROLLER_SID = 'urn:upnp-org:serviceId:RGBController1';
+	var RGB_DEVICE_TYPES = [
+		["FGRGBWM-441", "Fibaro RGBW Controller"],
+		["ZIP-RGBW", "Zipato RGBW Bulb"],
+		["Other", "Other"]
+	];
 	var myModule = {};
 
 	// Inject plugin specific CSS rules
@@ -13,8 +18,9 @@ var RGBController = (function (api, $) {
 	} else {
 		pluginStyle.prop("type", "text/css");
 	}
-	pluginStyle.html("\
-			#RGBController_colorWheel { width: 400px; height: 400px; margin: 20px auto; }\
+	pluginStyle
+		.html("\
+			#RGBController_controls { width: 400px; height: 400px; margin: 20px auto; }\
 			#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
 			#RGBController_sliders { display: inline-block; margin-left: 50px; } \
 			#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
@@ -34,7 +40,8 @@ var RGBController = (function (api, $) {
 	// UI5 compatibility with UI7 JavaScript API
 	if (api === null) {
 		api = {
-			getListOfDevices : function () {
+			version: "UI5",
+			getListOfDevices: function () {
 				return jsonp.ud.devices;
 			},
 			setCpanelContent: function (html) {
@@ -95,17 +102,18 @@ var RGBController = (function (api, $) {
 		try {
 			Utils.logDebug("[RGBController.showColorWheel] Show color wheel for device " + deviceId);
 			api.setCpanelContent(
-						'<div id="RGBController_colorWheel">'
-					+		"The plugin is not configured. Please go in tab 'Settings'"
-					+	'</div>'
+					'<div id="RGBController_controls">'
+				+		"The plugin is not configured. Please go in tab 'Settings'"
+				+	'</div>'
 			);
 
-			var RGBDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGBCONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
-			if (RGBDeviceId !== 0) {
-				var color = api.getDeviceStateVariable(deviceId, RGBCONTROLLER_SID, "Color", {dynamic: true});
+			var rgbDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
+			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
+			if (rgbDeviceId !== 0) {
+				var color = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
 				color = "#" + color.replace("#", "");
-				Utils.logDebug("[RGBController.showColorWheel] RGBDeviceId:" + RGBDeviceId + " Color:" + color);
-				drawAndManageColorWheel(deviceId, color);
+				Utils.logDebug("[RGBController.showColorWheel] RGB DeviceId/DeviceType:" + rgbDeviceId + "/" + rgbDeviceType + " Color:" + color);
+				drawAndManageColorWheel(deviceId, rgbDeviceType, color);
 			}
 		} catch (err) {
 			Utils.logError('Error in RGBController.showColorWheel: ' + err);
@@ -115,7 +123,7 @@ var RGBController = (function (api, $) {
 	/**
 	 * Draw and manage the color wheel
 	 */
-	function drawAndManageColorWheel (deviceId, color) {
+	function drawAndManageColorWheel (deviceId, rgbDeviceType, color) {
 		var lastSendDate = +new Date();
 		var sendTimer = 0;
 		var currentColor = color;
@@ -124,8 +132,7 @@ var RGBController = (function (api, $) {
 
 		Utils.logDebug("[RGBController.drawAndManageColorWheel] Draw for device " + deviceId + " with initial color " + color);
 
-		$("#RGBController_colorWheel").html(
-				'<div id="RGBController_colorpicker"></div>'
+		var html = '<div id="RGBController_colorpicker"></div>'
 			+	'<div id="RGBController_sliders">'
 			+		'<div id="RGBController_red"></div>'
 			+		'<div id="RGBController_green"></div>'
@@ -134,8 +141,9 @@ var RGBController = (function (api, $) {
 			+	'</div>'
 			+	'<div id="RGBController_swatch" class="ui-widget-content ui-corner-all">'
 			+		'<div id="RGBController_innerswatch"></div>'
-			+	'</div>'
-			+	'<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
+			+	'</div>';
+		if (rgbDeviceType == "FGRGBWM-441") {
+			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
 			+		'<select id="RGBController_programs" class="ui-widget-content">'
 			+			'<option value="0" selected="selected">&lt;Animation&gt;</option>'
 			+			'<option value="6">Fireplace</option>'
@@ -146,8 +154,9 @@ var RGBController = (function (api, $) {
 			+		'</select>'
 			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
 			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
-			+	'</div>'
-		);
+			+	'</div>';
+		}
+		$("#RGBController_controls").html(html);
 
 		var colorPicker = $.farbtastic("#RGBController_colorpicker", { callback:function() { }, width: 180 });
 
@@ -157,7 +166,8 @@ var RGBController = (function (api, $) {
 			min: 0,
 			max: 255,
 			range: "min",
-			slide: onSliderUpdate
+			//slide: onSliderUpdate
+			stop: onSliderUpdate
 		});
 
 		// Fibaro animation programs
@@ -197,7 +207,7 @@ var RGBController = (function (api, $) {
 			}
 		}
 		function updateSliders (color) {
-		Utils.logDebug("[RGBController.updateSliders]");
+			Utils.logDebug("[RGBController.updateSliders]");
 			var red = parseInt(color.substring(1, 3), 16);
 			var green = parseInt(color.substring(3, 5), 16);
 			var blue = parseInt(color.substring(5, 7), 16);
@@ -233,6 +243,7 @@ var RGBController = (function (api, $) {
 			return hex.join("").toUpperCase();
 		}
 		function pickerUpdate (pickerRgbColor) {
+			pickerRgbColor = pickerRgbColor.toUpperCase()
 			updateSwatch(pickerRgbColor);
 			updateSliders(pickerRgbColor);
 			setColor(pickerRgbColor);
@@ -257,7 +268,7 @@ var RGBController = (function (api, $) {
 			sendTimer = 0;
 			lastSendDate = +new Date();
 			Utils.logDebug("[RGBController.sendColor] Set color to " + currentColor + " for device " + deviceId);
-			api.performActionOnDevice(deviceId, RGBCONTROLLER_SID, "SetColorTarget", {
+			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetColorTarget", {
 				actionArguments: {
 					newColorTargetValue: currentColor.replace("#", "")
 				},
@@ -272,33 +283,42 @@ var RGBController = (function (api, $) {
 	}
 
 	/**
-	 * Search Fibaro FGRGB-101 devices
+	 * Search RGB devices
 	 */
-	function getRGBDevices () {
-		var RGBDevices = [];
+	function getRgbDevices () {
+		var rgbDevices = [];
 		var devices = api.getListOfDevices();
 		var i, j;
 		for (i = 0; i < devices.length; i++) {
 			var device = devices[i];
-			if ((device.device_type == DEVICETYPE_DIMMABLE_LIGHT) && (device.altid  == "e1")) {
-				for (j = 0; j < devices.length; j++) {
-					var parentDevice = devices[j];
-					if ((parentDevice.id == device.id_parent) && (parentDevice.device_type == DEVICETYPE_DIMMABLE_LIGHT) && (parentDevice.manufacturer == "Fibar")) {
-						RGBDevices.push(parentDevice);
+			if ((device.device_type == DEVICETYPE_DIMMABLE_LIGHT) && (device.disabled == 0) && (device.id_parent == 1)) {
+				// Check if device responds to Z-Wave Color Command Class
+				for (j = 0; j < device.states.length; j++) {
+					if (device.states[j].variable == "Capabilities") {
+						if (device.states[j].value.indexOf(",51,") > -1) {
+							rgbDevices.push(device);
+							break;
+						}
 					}
 				}
+				
 			}
 		}
-		return RGBDevices;
+		return rgbDevices;
 	}
 
 	/**
 	 * Set RGB controller settings
 	 */
-	function setSettings (deviceId, RGBDeviceId) {
-		Utils.logDebug("[RGBController.setSettings] Save RGBDeviceId " + RGBDeviceId + " for device " + deviceId);
-		api.setDeviceStateVariablePersistent(deviceId, RGBCONTROLLER_SID, "DeviceId", RGBDeviceId);
-		$("#RGBController_message").html("Settings have been modified. Please save your changes (UI5).");
+	function setSettings (deviceId, rgbDeviceId, rgbDeviceType) {
+		Utils.logDebug("[RGBController.setSettings] Save DeviceId/DeviceType " + rgbDeviceId + "/" + rgbDeviceType + " for device " + deviceId);
+		api.setDeviceStateVariablePersistent(deviceId, RGB_CONTROLLER_SID, "DeviceId", rgbDeviceId);
+		api.setDeviceStateVariablePersistent(deviceId, RGB_CONTROLLER_SID, "DeviceType", rgbDeviceType);
+		if (api.version == "UI5") {
+			$("#RGBController_message").html("Settings have been modified. Please save your changes.");
+		} else {
+			$("#RGBController_message").html("Settings have been modified. Wait a few secondes for the changes to appear.");
+		}
 	}
 
 	/**
@@ -307,18 +327,25 @@ var RGBController = (function (api, $) {
 	function showSettings (deviceId) {
 		try {
 			Utils.logDebug("[RGBController.showSettings] Show settings for device " + deviceId);
-			//var RGBDeviceId = parseInt(get_device_state (deviceId, RGBCONTROLLER_SID, "DeviceId", 0));
-			var RGBDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGBCONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
+			var rgbDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
+			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
 
 			var html =	'<div id="RGBController_settings">'
 					+		'<p>To use this RGB controller, you must add the main Fibaro Controller.</p>'
-					+		'<select id="RGBController_deviceSelect">'
+					+		'<select id="RGBController_deviceIdSelect">'
 					+			'<option value="0">-- Select a device --</option>';
-			var RGBDevices = getRGBDevices();
+			var rgbDevices = getRgbDevices();
 			var i;
-			for (i = 0; i < RGBDevices.length; ++i) {
-				var RGBDevice = RGBDevices[i];
-				html +=			'<option value="' + RGBDevice.id + '"' + (RGBDevice.id == RGBDeviceId ? ' selected' : '') + '>' + RGBDevice.name + ' (#' + RGBDevice.id + ')</option>';
+			for (i = 0; i < rgbDevices.length; ++i) {
+				var rgbDevice = rgbDevices[i];
+				html +=			'<option value="' + rgbDevice.id + '"' + (rgbDevice.id == rgbDeviceId ? ' selected' : '') + '>' + rgbDevice.name + ' (#' + rgbDevice.id + ')</option>';
+			}
+			html +=			'</select>'
+					+		'<select id="RGBController_deviceTypeSelect">'
+					+			'<option value="0">-- Select a type --</option>';
+			for (i = 0; i < RGB_DEVICE_TYPES.length; ++i) {
+				var rgbType = RGB_DEVICE_TYPES[i];
+				html +=			'<option value="' + rgbType[0] + '"' + (rgbType[0] == rgbDeviceType ? ' selected' : '') + '>' + rgbType[1] + '</option>';
 			}
 			html +=			'</select>'
 					+		'<button>Select</button>'
@@ -328,8 +355,9 @@ var RGBController = (function (api, $) {
 
 			$("#RGBController_settings button")
 				.click(function () {
-					var RGBDeviceId = $("#RGBController_deviceSelect").val();
-					setSettings(deviceId, RGBDeviceId);
+					var rgbDeviceId = $("#RGBController_deviceIdSelect").val();
+					var rgbDeviceType = $("#RGBController_deviceTypeSelect").val();
+					setSettings(deviceId, rgbDeviceId, rgbDeviceType);
 				});
 		} catch (err) {
 			Utils.logError('Error in RGBController.showSettings(): ' + err);
@@ -342,7 +370,7 @@ var RGBController = (function (api, $) {
 	function startAnimationProgram (deviceId, programId) {
 		try {
 			Utils.logDebug("[RGBController.startAnimationProgram] Start program " + programId + " for device " + deviceId);
-			api.performActionOnDevice(deviceId, RGBCONTROLLER_SID, "StartAnimationProgram", {
+			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "StartAnimationProgram", {
 				actionArguments: {
 					programId: programId
 				},

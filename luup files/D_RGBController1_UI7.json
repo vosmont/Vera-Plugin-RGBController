@@ -40,7 +40,7 @@
 			},
 			"Position": "0",
 			"TabType": "flash",
-			"TopNavigationTab": "1",
+			"top_navigation_tab": "1",
 			"SceneGroup": [
 				{
 					"id": "1",
@@ -169,7 +169,7 @@
 				"text": "Color wheel"
 			},
 			"Position": "1",
-			"TopNavigationTab": "1",
+			"top_navigation_tab": "1",
 			"TabType": "javascript",
 			"ScriptName": "J_RGBController1.js",
 			"Function": "RGBController.showColorWheel"
@@ -180,7 +180,7 @@
 				"text": "Settings"
 			},
 			"Position": "2",
-			"TopNavigationTab": "1",
+			"top_navigation_tab": "1",
 			"TabType": "javascript",
 			"ScriptName": "J_RGBController1.js",
 			"Function": "RGBController.showSettings"

@@ -12,10 +12,15 @@
 			<defaultValue>0</defaultValue>
 		</stateVariable>
 		<stateVariable>
+			<name>DeviceType</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+		</stateVariable>
+		<stateVariable>
 			<name>Color</name>
 			<sendEventsAttribute>yes</sendEventsAttribute>
 			<dataType>string</dataType>
-			<defaultValue>000000</defaultValue>
+			<defaultValue>#00000000</defaultValue>
 			<shortCode>color</shortCode>
 		</stateVariable>
 		<stateVariable>
@@ -40,14 +45,77 @@
 			<shortCode>bluealias</shortCode>
 		</stateVariable>
 		<stateVariable>
+			<name>WhiteAlias</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+			<defaultValue>e4</defaultValue>
+			<shortCode>whitealias</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_Target</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>boolean</dataType>
+			<defaultValue>0</defaultValue>
+		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_Status</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>boolean</dataType>
+			<defaultValue>0</defaultValue>
+		</stateVariable>
+		<stateVariable>
 			<name>A_ARG_TYPE_programId</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>ui1</dataType>
 			<defaultValue>0</defaultValue>
 		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_programName</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+			<allowedValueList>
+				<allowedValue>Fireplace</allowedValue>
+				<allowedValue>Storm</allowedValue>
+				<allowedValue>Rainbow</allowedValue>
+				<allowedValue>Aurora</allowedValue>
+				<allowedValue>LPD</allowedValue>
+			</allowedValueList>
+		</stateVariable>
 	</serviceStateTable>
 	<actionList>
+		<!-- Status -->
 		<action>
+			<!-- DEPRECATED -->
+			<name>SetTarget</name>
+			<argumentList>
+				<argument>
+					<name>newTargetValue</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_Target</relatedStateVariable>
+				</argument>
+			</argumentList>
+			<!-- DEPRECATED -->
+			<name>GetTarget</name>
+			<argumentList>
+				<argument>
+					<name>retTargetValue</name>
+					<direction>out</direction>
+					<relatedStateVariable>A_ARG_TYPE_Target</relatedStateVariable>
+				</argument>
+			</argumentList>
+			<!-- DEPRECATED -->
+			<name>GetStatus</name>
+			<argumentList>
+				<argument>
+					<name>ResultStatus</name>
+					<direction>out</direction>
+					<relatedStateVariable>A_ARG_TYPE_Status</relatedStateVariable>
+				</argument>
+			</argumentList>
+		</action>
+		<!-- Color -->
+		<action>
+			<!-- DEPRECATED -->
 			<name>SetColor</name>
 			<argumentList>
 				<argument>
@@ -68,6 +136,17 @@
 			</argumentList>
 		</action>
 		<action>
+			<name>GetColor</name>
+			<argumentList>
+				<argument>
+					<name>retColorValue</name>
+					<direction>out</direction>
+					<relatedStateVariable>Color</relatedStateVariable>
+				</argument>
+			</argumentList>
+		</action>
+		<!-- Animation -->
+		<action>
 			<name>StartAnimationProgram</name>
 			<argumentList>
 				<argument>
@@ -75,9 +154,17 @@
 					<direction>in</direction>
 					<relatedStateVariable>A_ARG_TYPE_programId</relatedStateVariable>
 				</argument>
+				<argument>
+					<name>programName</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_programName</relatedStateVariable>
+				</argument>
+			</argumentList>
+		</action>
+		<action>
+			<name>StopAnimationProgram</name>
+			<argumentList>
 			</argumentList>
 		</action>
 	</actionList>
 </scpd>
- 
- 

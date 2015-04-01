@@ -3,42 +3,95 @@
 	<files>L_RGBController1.lua</files>
 	<startup>startup</startup>
 	<actionList>
+		<!-- Status -->
+		<action>
+			<!-- DEPRECATED -->
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>SetTarget</name>
+			<job>
+				setTarget(lul_device, lul_settings.newTargetValue)
+				return 4, nil
+			</job>
+		</action>
+		<action>
+			<!-- DEPRECATED -->
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>GetTarget</name>
+			<run>
+				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+			</run>
+		</action>
+		<action>
+			<!-- DEPRECATED -->
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>GetStatus</name>
+			<run>
+				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
+			</run>
+		</action>
 		<action>
 			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
 			<name>SetTarget</name>
+			<job>
+				setTarget(lul_device, lul_settings.newTargetValue)
+				return 4, nil
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+			<name>GetTarget</name>
 			<run>
-				return setTarget(lul_device, lul_settings.newTargetValue)
+				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
 			</run>
 		</action>
 		<action>
-			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>SetTarget</name>
+			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
+			<name>GetStatus</name>
 			<run>
-				return setTarget(lul_device, lul_settings.newTargetValue)
+				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
 			</run>
 		</action>
+		<!-- Color -->
 		<action>
+			<!-- DEPRECATED -->
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>SetColor</name>
-			<run>
-				return setColorTarget(lul_device, lul_settings.newColor)
-			</run>
-			<jobname>state-toggle</jobname>
+			<job>
+				setColorTarget(lul_device, lul_settings.newColor)
+				return 4, nil
+			</job>
 		</action>
 		<action>
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>SetColorTarget</name>
-			<run>
-				return setColorTarget(lul_device, lul_settings.newColorTargetValue)
-			</run>
+			<job>
+				setColorTarget(lul_device, lul_settings.newColorTargetValue)
+				return 4, nil
+			</job>
 		</action>
 		<action>
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>StartAnimationProgram</name>
+			<name>GetColor</name>
 			<run>
-				return startAnimationProgram(lul_device, lul_settings.programId)
+				getColor(lul_device)
 			</run>
+		</action>
+		<!-- Animation -->
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>StartAnimationProgram</name>
+			<job>
+				startAnimationProgram(lul_device, lul_settings.programId, lul_settings.programName)
+				return 4, nil
+			</job>
+		</action>
+		<action>
+			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
+			<name>StopAnimationProgram</name>
+			<job>
+				startAnimationProgram(lul_device, 0, nil)
+				return 4, nil
+			</job>
 		</action>
 	</actionList>
 </implementation>
- 
