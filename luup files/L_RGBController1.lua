@@ -9,7 +9,7 @@ local SID_ZWaveNetwork = "urn:micasaverde-com:serviceId:ZWaveNetwork1"
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.0"
+local PLUGIN_VERSION = "1.1"
 local DEBUG_MODE = false
 local pluginParams = {}
 
@@ -176,14 +176,15 @@ end
 local function initFromRGBDevice (lul_device)
 	-- Set color from color levels of the slave device
 	local formerColor = luup.variable_get(SID_RGBController, "Color", lul_device)
+	formerColor = formerColor:gsub("#","")
 	local r = toHex(getColorLevel(lul_device, "red"))   or getComponentColor(formerColor, "red")
 	local g = toHex(getColorLevel(lul_device, "green")) or getComponentColor(formerColor, "green")
 	local b = toHex(getColorLevel(lul_device, "blue"))  or getComponentColor(formerColor, "blue")
 	local w = toHex(getColorLevel(lul_device, "white")) or getComponentColor(formerColor, "white")
-	local color = "#" .. r .. g .. b .. w
-	debug("initFromRGBDevice", "Get current color : " .. color)
+	local color = r .. g .. b .. w
+	debug("initFromRGBDevice", "Get current color : #" .. color)
 	if (formerColor ~= color) then
-		luup.variable_set(SID_RGBController, "Color", color, lul_device)
+		luup.variable_set(SID_RGBController, "Color", "#" .. color, lul_device)
 	end
 
 	-- Set the status of the controller from slave status
@@ -234,7 +235,7 @@ function setColorTarget (lul_device, newColor)
 	else
 		newColor = newColor:gsub("#","")
 		if ((newColor:len() ~= 6) and (newColor:len() ~= 8)) then
-			error("Color '" .. tostring(newColor) .. "' has bad format. Should be '#[A-F0-9]{6}' or '#[A-F0-9]{8}'")
+			error("Color '" .. tostring(newColor) .. "' has bad format. Should be '#[a-fA-F0-9]{6}' or '#[a-fA-F0-9]{8}'")
 			return false
 		end
 		if (newColor:len() == 6) then

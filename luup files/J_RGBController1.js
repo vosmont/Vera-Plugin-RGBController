@@ -2,8 +2,8 @@
 
 var RGBController = (function (api, $) {
 
-	var uuid = 'e76e1855-ea23-46c0-8dda-4b1a9d852bc6';
-	var RGB_CONTROLLER_SID = 'urn:upnp-org:serviceId:RGBController1';
+	var uuid = "e76e1855-ea23-46c0-8dda-4b1a9d852bc6";
+	var RGB_CONTROLLER_SID = "urn:upnp-org:serviceId:RGBController1";
 	var RGB_DEVICE_TYPES = [
 		["FGRGBWM-441", "Fibaro RGBW Controller"],
 		["ZIP-RGBW", "Zipato RGBW Bulb"],
@@ -110,8 +110,14 @@ var RGBController = (function (api, $) {
 			var rgbDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
 			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
 			if (rgbDeviceId !== 0) {
-				var color = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
-				color = "#" + color.replace("#", "");
+				var color = "#00000000";
+				var colorFromStateVariable = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
+				if (typeof colorFromStateVariable == "string") {
+					var checkedColor = colorFromStateVariable.match(/[a-fA-F0-9]{8}/);
+					if (checkedColor != null) {
+						color = "#" + checkedColor[0];
+					}
+				}
 				Utils.logDebug("[RGBController.showColorWheel] RGB DeviceId/DeviceType:" + rgbDeviceId + "/" + rgbDeviceType + " Color:" + color);
 				drawAndManageColorWheel(deviceId, rgbDeviceType, color);
 			}
