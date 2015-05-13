@@ -7,6 +7,7 @@ var RGBController = (function (api, $) {
 	var RGB_DEVICE_TYPES = [
 		["FGRGBWM-441", "Fibaro RGBW Controller"],
 		["ZIP-RGBW", "Zipato RGBW Bulb"],
+		["HYPERION", "Hyperion Remote"],
 		["Other", "Other"]
 	];
 	var myModule = {};
@@ -109,7 +110,7 @@ var RGBController = (function (api, $) {
 
 			var rgbDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
 			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
-			if (rgbDeviceId !== 0) {
+			if ((rgbDeviceId !== 0) || (rgbDeviceType == "HYPERION")) {
 				var color = "#00000000";
 				var colorFromStateVariable = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
 				if (typeof colorFromStateVariable == "string") {
@@ -138,6 +139,7 @@ var RGBController = (function (api, $) {
 
 		Utils.logDebug("[RGBController.drawAndManageColorWheel] Draw for device " + deviceId + " with initial color " + color);
 
+		// Color picker
 		var html = '<div id="RGBController_colorpicker"></div>'
 			+	'<div id="RGBController_sliders">'
 			+		'<div id="RGBController_red"></div>'
@@ -148,15 +150,46 @@ var RGBController = (function (api, $) {
 			+	'<div id="RGBController_swatch" class="ui-widget-content ui-corner-all">'
 			+		'<div id="RGBController_innerswatch"></div>'
 			+	'</div>';
+		
+		// Animations
 		if (rgbDeviceType == "FGRGBWM-441") {
 			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
 			+		'<select id="RGBController_programs" class="ui-widget-content">'
-			+			'<option value="0" selected="selected">&lt;Animation&gt;</option>'
-			+			'<option value="6">Fireplace</option>'
-			+			'<option value="7">Storm</option>'
-			+			'<option value="8">Rainbow</option>'
-			+			'<option value="9">Aurora</option>'
-			+			'<option value="10">LPD</option>'
+			+			'<option value="" selected="selected">&lt;Animation&gt;</option>'
+			+			'<option value="Fireplace">Fireplace</option>'
+			+			'<option value="Storm">Storm</option>'
+			+			'<option value="Rainbow">Rainbow</option>'
+			+			'<option value="Aurora">Aurora</option>'
+			+			'<option value="LPD">LPD</option>'
+			+		'</select>'
+			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
+			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
+			+	'</div>';
+		}
+		if (rgbDeviceType == "HYPERION") {
+			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
+			+		'<select id="RGBController_programs" class="ui-widget-content">'
+			+			'<option value="" selected="selected">&lt;Animation&gt;</option>'
+			
+			+			'<option value="Knight rider">Knight rider</option>'
+			
+			+			'<option value="Red mood blobs">Red mood blobs</option>'
+			+			'<option value="Green mood blobs">Green mood blobs</option>'
+			+			'<option value="Blue mood blobs">Blue mood blobs</option>'
+			+			'<option value="Warm mood blobs">Warm mood blobs</option>'
+			+			'<option value="Cold mood blobs">Cold mood blobs</option>'
+			+			'<option value="Full color mood blobs">Full color mood blobs</option>'
+			
+			+			'<option value="Rainbow mood">Rainbow mood</option>'
+			+			'<option value="Rainbow swirl">Rainbow swirl</option>'
+			+			'<option value="Rainbow swirl fast">Rainbow swirl fast</option>'
+			
+			+			'<option value="Snake">Snake</option>'
+			
+			+			'<option value="Strobe blue">Strobe blue</option>'
+			+			'<option value="Strobe Raspbmc">Strobe Raspbmc</option>'
+			+			'<option value="Strobe white">Strobe white</option>'
+			
 			+		'</select>'
 			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
 			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
@@ -176,17 +209,17 @@ var RGBController = (function (api, $) {
 			stop: onSliderUpdate
 		});
 
-		// Fibaro animation programs
+		// Animation programs
 		$("#RGBController_program_start")
 			.click(function (event) {
-				var programId = $("#RGBController_programs").val();
-				if (programId > 0) {
-					startAnimationProgram(deviceId, programId);
-				}
+				var programName = $("#RGBController_programs").val();
+				//if (programName > 0) {
+					startAnimationProgram(deviceId, programName);
+				//}
 			});
 		$("#RGBController_program_stop")
 			.click(function (event) {
-				startAnimationProgram(deviceId, 0);
+				startAnimationProgram(deviceId, "");
 			});
 
 		// Init
@@ -337,7 +370,7 @@ var RGBController = (function (api, $) {
 			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
 
 			var html =	'<div id="RGBController_settings">'
-					+		'<p>To use this RGB controller, you must add the main Fibaro Controller.</p>'
+					+		'<p>To use this RGB controller, you must add the main RGB Controller.</p>'
 					+		'<select id="RGBController_deviceIdSelect">'
 					+			'<option value="0">-- Select a device --</option>';
 			var rgbDevices = getRgbDevices();
@@ -348,7 +381,7 @@ var RGBController = (function (api, $) {
 			}
 			html +=			'</select>'
 					+		'<select id="RGBController_deviceTypeSelect">'
-					+			'<option value="0">-- Select a type --</option>';
+					+			'<option value="">-- Select a type --</option>';
 			for (i = 0; i < RGB_DEVICE_TYPES.length; ++i) {
 				var rgbType = RGB_DEVICE_TYPES[i];
 				html +=			'<option value="' + rgbType[0] + '"' + (rgbType[0] == rgbDeviceType ? ' selected' : '') + '>' + rgbType[1] + '</option>';
@@ -373,12 +406,12 @@ var RGBController = (function (api, $) {
 	/**
 	 * Start Fibaro animation program
 	 */
-	function startAnimationProgram (deviceId, programId) {
+	function startAnimationProgram (deviceId, programName) {
 		try {
-			Utils.logDebug("[RGBController.startAnimationProgram] Start program " + programId + " for device " + deviceId);
+			Utils.logDebug("[RGBController.startAnimationProgram] Start program '" + programName + "' for device " + deviceId);
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "StartAnimationProgram", {
 				actionArguments: {
-					programId: programId
+					programName: programName
 				},
 				onSuccess: function () {
 					Utils.logDebug("[RGBController.startAnimationProgram] OK");

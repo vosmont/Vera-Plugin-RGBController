@@ -43,35 +43,13 @@
 			"top_navigation_tab": "1",
 			"SceneGroup": [
 				{
-					"id": "1",
-					"top": "0",
-					"left": "2",
-					"x": "1",
-					"y": "1"
-				},
-				{
-					"id": "2",
-					"top": "0",
-					"left": "0",
-					"x": "2",
-					"y": "1"
+					"id": "1"
 				}
 			],
 			"ControlGroup": [
 				{
 					"id": "1",
-					"isSingle": "1",
 					"scenegroup": "1"
-				},
-				{
-					"id": "2",
-					"isSingle": "1",
-					"scenegroup": "2"
-				},
-				{
-					"id": "3",
-					"isSingle": "1",
-					"scenegroup": "2"
 				}
 			],
 			"Control": [
@@ -134,7 +112,7 @@
 					}
 				},
 				{
-					"ControlGroup": "2",
+					"ControlGroup": "1",
 					"ControlType": "label",
 					"top": "0",
 					"left": "0",
@@ -148,7 +126,7 @@
 					}
 				},
 				{
-					"ControlGroup": "3",
+					"ControlGroup": "1",
 					"ControlType": "variable",
 					"top": "0",
 					"left": "1",
@@ -159,6 +137,23 @@
 						"Left": 200,
 						"Width": 100,
 						"Height": 20
+					}
+				},
+				{
+					"ControlGroup": 1,
+					"ControlType": "line_break"
+				},
+				{
+					"ControlGroup": 1,
+					"ControlType": "variable",
+					"text_align": "left",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Variable": "Message",
+						"Top": 100,
+						"Left": 10,
+						"Width": 300,
+						"Height": 80
 					}
 				}
 			]

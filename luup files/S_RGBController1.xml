@@ -5,11 +5,22 @@
 		<minor>0</minor>
 	</specVersion>
 	<serviceStateTable>
+		<!-- Main variables -->
 		<stateVariable>
 			<name>DeviceId</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>ui2</dataType>
 			<defaultValue>0</defaultValue>
+		</stateVariable>
+		<stateVariable>
+			<name>DeviceIP</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>String</dataType>
+		</stateVariable>
+		<stateVariable>
+			<name>DevicePort</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>String</dataType>
 		</stateVariable>
 		<stateVariable>
 			<name>DeviceType</name>
@@ -23,6 +34,7 @@
 			<defaultValue>#00000000</defaultValue>
 			<shortCode>color</shortCode>
 		</stateVariable>
+		<!-- Color aliases -->
 		<stateVariable>
 			<name>RedAlias</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
@@ -48,9 +60,16 @@
 			<name>WhiteAlias</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
-			<defaultValue>e4</defaultValue>
+			<defaultValue>e5</defaultValue>
 			<shortCode>whitealias</shortCode>
 		</stateVariable>
+		<stateVariable>
+			<name>Message</name>
+			<sendEventsAttribute>yes</sendEventsAttribute>
+			<dataType>string</dataType>
+			<shortCode>message</shortCode>
+		</stateVariable>
+		<!-- Arguments -->
 		<stateVariable>
 			<name>A_ARG_TYPE_Target</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
@@ -73,6 +92,7 @@
 			<name>A_ARG_TYPE_programName</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
+			<!--
 			<allowedValueList>
 				<allowedValue>Fireplace</allowedValue>
 				<allowedValue>Storm</allowedValue>
@@ -80,6 +100,7 @@
 				<allowedValue>Aurora</allowedValue>
 				<allowedValue>LPD</allowedValue>
 			</allowedValueList>
+			-->
 		</stateVariable>
 	</serviceStateTable>
 	<actionList>
