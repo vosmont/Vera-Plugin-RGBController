@@ -1,7 +1,8 @@
 # Vera-Plugin-RGBController
 
-Plugin for GetVera Home Controller (VeraEdge, Vera3, VeraLite) with UI7 (http://getvera.com/)
-Compatible with UI7 & UI5
+Plugin for [getVera](http://getvera.com/) Home Controller (VeraEdge, Vera3, VeraLite).
+
+**Compatible with UI5 & UI7**
 
 This plugin is able to manage RGBW color channels and animation programs.
 
