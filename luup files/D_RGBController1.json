@@ -126,6 +126,18 @@
 						"Width": 100,
 						"Height": 20
 					}
+				},
+				{
+					"ControlType": "variable",
+					"text_align": "left",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:RGBController1",
+						"Variable": "Message",
+						"Top": 100,
+						"Left": 50,
+						"Width": 300,
+						"Height": 80
+					}
 				}
 			]
 		},
