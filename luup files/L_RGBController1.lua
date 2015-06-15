@@ -492,11 +492,16 @@ RGBDeviceTypes["HYPERION"] = {
 		if (pluginParams.rgbDeviceIp == "") then
 			return false
 		end
-		
+
 		local json = require("dkjson")
 		if (type(json) == "string") then
 			json = require("json")
 		end
+		if (type(json) == "string") then
+			showErrorOnUI("HYPERION.sendCommand", lul_device, "No JSON decoder")
+			return false
+		end
+
 		local socket = require("socket")
 
 		debug("HYPERION.sendCommand", "Connect to " .. tostring(pluginParams.rgbDeviceIp) .. ":" .. tostring(pluginParams.rgbDevicePort))
