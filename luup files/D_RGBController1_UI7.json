@@ -1,8 +1,8 @@
 {
-	"default_icon": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_off.png",
+	"default_icon": "http://vosmont.github.io/icons/rgb_controller_off.png",
 	"state_icons": [
 		{
-			"img": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_off.png",
+			"img": "http://vosmont.github.io/icons/rgb_controller_off.png",
 			"conditions": [
 				{
 					"service": "urn:upnp-org:serviceId:SwitchPower1",
@@ -13,7 +13,7 @@
 			]
 		},
 		{
-			"img": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller_on.png",
+			"img": "http://vosmont.github.io/icons/rgb_controller_on.png",
 			"conditions": [
 				{
 					"service": "urn:upnp-org:serviceId:SwitchPower1",
@@ -29,7 +29,7 @@
 	"inScene": "1",
 	"doc_url":{
 		"doc_forced_url":{
-			"text":"http://forum.micasaverde.com/"
+			"text":"https://github.com/vosmont/Vera-Plugin-RGBController"
 		}
 	},
 	"Tabs":[

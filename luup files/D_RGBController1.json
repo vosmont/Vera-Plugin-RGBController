@@ -1,5 +1,5 @@
 {
-	"flashicon": "https://raw.githubusercontent.com/vosmont/Vera-Plugin-RGBController/master/icons/rgb_controller.png",
+	"flashicon": "http://vosmont.github.io/icons/rgb_controller.png",
 	"state_icons": [
 		"rgb_controller_0.png",
 		"rgb_controller_100.png"
@@ -15,7 +15,7 @@
 	},
 	"doc_url":{
 		"doc_forced_url":{
-			"text":"http://forum.micasaverde.com/"
+			"text":"https://github.com/vosmont/Vera-Plugin-RGBController"
 		}
 	},
 	"Tabs":[

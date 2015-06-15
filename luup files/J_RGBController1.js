@@ -7,6 +7,7 @@ var RGBController = (function (api, $) {
 	var RGB_DEVICE_TYPES = [
 		["FGRGBWM-441", "Fibaro RGBW Controller"],
 		["ZIP-RGBW", "Zipato RGBW Bulb"],
+		["AEO_ZW098-C55", "Aeotec RGBW Bulb"],
 		["HYPERION", "Hyperion Remote"],
 		["Other", "Other"]
 	];
@@ -120,7 +121,17 @@ var RGBController = (function (api, $) {
 					}
 				}
 				Utils.logDebug("[RGBController.showColorWheel] RGB DeviceId/DeviceType:" + rgbDeviceId + "/" + rgbDeviceType + " Color:" + color);
-				drawAndManageColorWheel(deviceId, rgbDeviceType, color);
+				$("#RGBController_controls").empty();
+				myInterface.showModalLoading();
+				getAnimationProgramList(deviceId, {
+					onSuccess: function (programList) {
+						myInterface.hideModalLoading();
+						drawAndManageColorWheel(deviceId, rgbDeviceType, color, programList);
+					},
+					onFailure: function () {
+						myInterface.hideModalLoading();
+					}
+				});
 			}
 		} catch (err) {
 			Utils.logError('Error in RGBController.showColorWheel: ' + err);
@@ -130,7 +141,7 @@ var RGBController = (function (api, $) {
 	/**
 	 * Draw and manage the color wheel
 	 */
-	function drawAndManageColorWheel (deviceId, rgbDeviceType, color) {
+	function drawAndManageColorWheel (deviceId, rgbDeviceType, color, programList) {
 		var lastSendDate = +new Date();
 		var sendTimer = 0;
 		var currentColor = color;
@@ -150,47 +161,16 @@ var RGBController = (function (api, $) {
 			+	'<div id="RGBController_swatch" class="ui-widget-content ui-corner-all">'
 			+		'<div id="RGBController_innerswatch"></div>'
 			+	'</div>';
-		
+
 		// Animations
-		if (rgbDeviceType == "FGRGBWM-441") {
+		if (programList.length > 0) {
 			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
 			+		'<select id="RGBController_programs" class="ui-widget-content">'
-			+			'<option value="" selected="selected">&lt;Animation&gt;</option>'
-			+			'<option value="Fireplace">Fireplace</option>'
-			+			'<option value="Storm">Storm</option>'
-			+			'<option value="Rainbow">Rainbow</option>'
-			+			'<option value="Aurora">Aurora</option>'
-			+			'<option value="LPD">LPD</option>'
-			+		'</select>'
-			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
-			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
-			+	'</div>';
-		}
-		if (rgbDeviceType == "HYPERION") {
-			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
-			+		'<select id="RGBController_programs" class="ui-widget-content">'
-			+			'<option value="" selected="selected">&lt;Animation&gt;</option>'
-			
-			+			'<option value="Knight rider">Knight rider</option>'
-			
-			+			'<option value="Red mood blobs">Red mood blobs</option>'
-			+			'<option value="Green mood blobs">Green mood blobs</option>'
-			+			'<option value="Blue mood blobs">Blue mood blobs</option>'
-			+			'<option value="Warm mood blobs">Warm mood blobs</option>'
-			+			'<option value="Cold mood blobs">Cold mood blobs</option>'
-			+			'<option value="Full color mood blobs">Full color mood blobs</option>'
-			
-			+			'<option value="Rainbow mood">Rainbow mood</option>'
-			+			'<option value="Rainbow swirl">Rainbow swirl</option>'
-			+			'<option value="Rainbow swirl fast">Rainbow swirl fast</option>'
-			
-			+			'<option value="Snake">Snake</option>'
-			
-			+			'<option value="Strobe blue">Strobe blue</option>'
-			+			'<option value="Strobe Raspbmc">Strobe Raspbmc</option>'
-			+			'<option value="Strobe white">Strobe white</option>'
-			
-			+		'</select>'
+			+			'<option value="" selected="selected">&lt;Animation&gt;</option>';
+			for (i = 0; i < programList.length; i++) {
+				html += '<option value="' + programList[i] + '">' + programList[i] + '</option>';
+			}
+			html += '</select>'
 			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
 			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
 			+	'</div>';
@@ -315,7 +295,7 @@ var RGBController = (function (api, $) {
 					Utils.logDebug("[RGBController.sendColor] OK");
 				},
 				onFailure: function () {
-				Utils.logDebug("[RGBController.sendColor] KO");
+					Utils.logDebug("[RGBController.sendColor] KO");
 				}
 			});
 		}
@@ -334,7 +314,10 @@ var RGBController = (function (api, $) {
 				// Check if device responds to Z-Wave Color Command Class
 				for (j = 0; j < device.states.length; j++) {
 					if (device.states[j].variable == "Capabilities") {
-						if (device.states[j].value.indexOf(",51,") > -1) {
+						var supportedCommandClasses = device.states[j].value.split("|")[1].split(",");
+						//if (device.states[j].value.indexOf(",51,") > -1) {
+						//if (device.states[j].value.match(/[,]?51[S]?[,]?/) != null) {
+						if ((supportedCommandClasses.indexOf("51") > -1) || (supportedCommandClasses.indexOf("51S") > -1)) {
 							rgbDevices.push(device);
 							break;
 						}
@@ -404,7 +387,29 @@ var RGBController = (function (api, $) {
 	}
 
 	/**
-	 * Start Fibaro animation program
+	 * Start animation program list
+	 */
+	function getAnimationProgramList (deviceId, options) {
+		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetAnimationProgramList", {
+			actionArguments: {},
+			onSuccess: function (response) {
+				var xmlDoc = $.parseXML(response.responseText), $xml = $(xmlDoc), programList = $xml.find("retProgramNames").text().split(",");
+				Utils.logDebug("[RGBController.getAnimationProgramList] OK");
+				if (typeof(options.onSuccess) == 'function') {
+					options.onSuccess(programList);
+				}
+			},
+			onFailure: function (response) {
+				Utils.logDebug("[RGBController.getAnimationProgramList] KO");
+				if (typeof(options.onFailure) == 'function') {
+					options.onFailure(response);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Start animation program
 	 */
 	function startAnimationProgram (deviceId, programName) {
 		try {

@@ -102,6 +102,13 @@
 			</allowedValueList>
 			-->
 		</stateVariable>
+		<!-- Trick of the dummy argument for computed return -->
+		<stateVariable>
+			<name>LastResult</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+			<shortCode>lastresult</shortCode>
+		</stateVariable>
 	</serviceStateTable>
 	<actionList>
 		<!-- Status -->
@@ -185,6 +192,16 @@
 		<action>
 			<name>StopAnimationProgram</name>
 			<argumentList>
+			</argumentList>
+		</action>
+		<action>
+			<name>GetAnimationProgramList</name>
+			<argumentList>
+				<argument>
+					<name>retProgramNames</name>
+					<direction>out</direction>
+					<relatedStateVariable>LastResult</relatedStateVariable>
+				</argument>
 			</argumentList>
 		</action>
 	</actionList>
