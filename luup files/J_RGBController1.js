@@ -39,6 +39,7 @@ var RGBController = (function (api, $) {
 		")
 		.appendTo("head");
 
+	// ***
 	// UI5 compatibility with UI7 JavaScript API
 	if (api === null) {
 		api = {
@@ -85,6 +86,10 @@ var RGBController = (function (api, $) {
 				});
 			}
 		};
+		myInterface = {
+			showModalLoading: function () {},
+			hideModalLoading: function () {}
+		}
 	}
 	if (typeof window.Utils === 'undefined') {
 		window.Utils = {
@@ -96,6 +101,7 @@ var RGBController = (function (api, $) {
 			}
 		};
 	}
+	// ***
 
 	/**
 	 * Show color wheel panel
