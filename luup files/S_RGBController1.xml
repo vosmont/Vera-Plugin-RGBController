@@ -111,6 +111,17 @@
 		</stateVariable>
 	</serviceStateTable>
 	<actionList>
+		<!-- Parameters -->
+		<action>
+			<name>GetRGBDeviceTypes</name>
+			<argumentList>
+				<argument>
+					<name>retRGBDeviceTypes</name>
+					<direction>out</direction>
+					<relatedStateVariable>LastResult</relatedStateVariable>
+				</argument>
+			</argumentList>
+		</action>
 		<!-- Status -->
 		<action>
 			<!-- DEPRECATED -->
@@ -173,6 +184,16 @@
 				</argument>
 			</argumentList>
 		</action>
+		<action>
+			<name>GetColorChannelNames</name>
+			<argumentList>
+				<argument>
+					<name>retColorChannelNames</name>
+					<direction>out</direction>
+					<relatedStateVariable>LastResult</relatedStateVariable>
+				</argument>
+			</argumentList>
+		</action>
 		<!-- Animation -->
 		<action>
 			<name>StartAnimationProgram</name>
@@ -195,10 +216,10 @@
 			</argumentList>
 		</action>
 		<action>
-			<name>GetAnimationProgramList</name>
+			<name>GetAnimationProgramNames</name>
 			<argumentList>
 				<argument>
-					<name>retProgramNames</name>
+					<name>retAnimationProgramNames</name>
 					<direction>out</direction>
 					<relatedStateVariable>LastResult</relatedStateVariable>
 				</argument>
