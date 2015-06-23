@@ -25,7 +25,7 @@ var RGBController = (function (api, $) {
 			#RGBController_green .ui-slider-range, #RGBController_green .ui-slider-handle { background-color: #8ae234 !important; }\
 			#RGBController_blue .ui-slider-range, #RGBController_blue .ui-slider-handle { background-color: #729fcf !important; }\
 			#RGBController_warmWhite .ui-slider-range, #RGBController_warmWhite .ui-slider-handle { background-color: #FBE616 !important; }\
-			#RGBController_coldWhite .ui-slider-range, #RGBController_coldWhite .ui-slider-handle { background-color: #FFFF88 !important; }\
+			#RGBController_coolWhite .ui-slider-range, #RGBController_coolWhite .ui-slider-handle { background-color: #FFFF88 !important; }\
 			#RGBController_swatch { height: 26px; border-radius: 25px; background-image: none; margin-top: 30px; border: none; background-color: black; }\
 			#RGBController_innerswatch { font:bold 24px arial; text-align: center; color: white; }\
 			#RGBController_program { margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
@@ -34,7 +34,7 @@ var RGBController = (function (api, $) {
 			#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: left; }\
 			#RGBController_settings .RGBController_setting span { display: inline-block; width: 30%; }\
 			#RGBController_settings .RGBController_setting select { width: 70%; }\
-			#RGBController_settings .RGBController_setting input { width: 70%; }\
+			#RGBController_settings .RGBController_setting input { width: 69%; }\
 			#RGBController_specificSettings .RGBController_setting { background-color: #FBA01C !important; }\
 			#RGBController_saveSettings { text-align: center !important; background-color: #00a652 !important; }\
 		")
@@ -61,11 +61,10 @@ var RGBController = (function (api, $) {
 				set_device_state(deviceId, service, variable, value, 0);
 			},
 			performActionOnDevice: function (deviceId, service, action, options) {
-				var query = "id=lu_action&output_format=json&DeviceNum=" + deviceId + "&serviceId=" + service + "&action=" + action;
+				var query = "id=lu_action&DeviceNum=" + deviceId + "&serviceId=" + service + "&action=" + action;
 				$.each(options.actionArguments, function (key, value) {
 					query += "&" + key + "=" + value;
 				});
-				
 				$.ajax({
 					url: data_request_url + query,
 					success: function (data, textStatus, jqXHR) {
@@ -116,9 +115,9 @@ var RGBController = (function (api, $) {
 				+	'</div>'
 			);
 
-			var rgbDeviceId = parseInt(api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceId", {dynamic: false}), 10);
-			var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
-			if ((rgbDeviceId !== 0) || (rgbDeviceType == "HYPERION")) {
+			var isConfigured = (api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Configured", {dynamic: false}) === "1");
+			if (isConfigured) {
+				var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
 				var color = "#0000000000";
 				var colorFromStateVariable = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
 				if (typeof colorFromStateVariable == "string") {
@@ -127,7 +126,7 @@ var RGBController = (function (api, $) {
 						color = "#" + checkedColor[0];
 					}
 				}
-				Utils.logDebug("[RGBController.showColorWheel] RGB DeviceId/DeviceType:" + rgbDeviceId + "/" + rgbDeviceType + " Color:" + color);
+				Utils.logDebug("[RGBController.showColorWheel] RGB device type:" + rgbDeviceType + " - Color:" + color);
 				$("#RGBController_controls").empty();
 				myInterface.showModalLoading();
 				$.when(
@@ -157,14 +156,14 @@ var RGBController = (function (api, $) {
 		var currentColor = color;
 		var rgbColor = color.substring(0, 7);
 		var warmWhiteColor = color.substring(7, 9);
-		var coldWhiteColor = color.substring(9, 11);
+		var coolWhiteColor = color.substring(9, 11);
 
 		Utils.logDebug("[RGBController.drawAndManageColorWheel] Draw for device " + deviceId + " with initial color " + color);
 
 		// Color picker and sliders (according to channels)
 		var html = '<div id="RGBController_colorpicker"></div>'
 			+	'<div id="RGBController_sliders">';
-		var colorNames = ["red", "green", "blue", "warmWhite", "coldWhite"];
+		var colorNames = ["red", "green", "blue", "warmWhite", "coolWhite"];
 		for (i = 0; i < colorNames.length; i++) {
 			if (channelNames.indexOf(colorNames[i]) > -1) {
 				html +=	'<div id="RGBController_' + colorNames[i] + '"></div>';
@@ -225,12 +224,12 @@ var RGBController = (function (api, $) {
 			var green = $("#RGBController_green").slider("value");
 			var blue = $("#RGBController_blue").slider("value");
 			var warmWhite = $("#RGBController_warmWhite").slider("value");
-			var coldWhite = $("#RGBController_coldWhite").slider("value");
-			var color = "#" + hexFromRGBW([red, green, blue, warmWhite, coldWhite]);
+			var coolWhite = $("#RGBController_coolWhite").slider("value");
+			var color = "#" + hexFromRGBW([red, green, blue, warmWhite, coolWhite]);
 			var newRgbColor = color.substring(0, 7);
 			warmWhiteColor = color.substring(7, 9);
-			coldWhiteColor = color.substring(9, 11);
-			Utils.logDebug("[RGBController.onSliderUpdate] RGB: " + newRgbColor  + " - Warm white: " + warmWhiteColor + " - Cold white: " + coldWhiteColor);
+			coolWhiteColor = color.substring(9, 11);
+			Utils.logDebug("[RGBController.onSliderUpdate] RGB: " + newRgbColor  + " - Warm white: " + warmWhiteColor + " - Cool white: " + coolWhiteColor);
 			if (newRgbColor != rgbColor) {
 				rgbColor = newRgbColor;
 				colorPicker.setColor(rgbColor);
@@ -249,14 +248,14 @@ var RGBController = (function (api, $) {
 			$("#RGBController_blue").slider("value", blue);
 			if (color.length > 7) {
 				var warmWhite = parseInt(color.substring(7, 9), 16);
-				var coldWhite = parseInt(color.substring(9, 11), 16);
+				var coolWhite = parseInt(color.substring(9, 11), 16);
 				$("#RGBController_warmWhite").slider("value", warmWhite);
-				$("#RGBController_coldWhite").slider("value", coldWhite);
+				$("#RGBController_coolWhite").slider("value", coolWhite);
 			}
 		}
 		function updateSwatch (color) {
 			if (color.length == 7) {
-				color += warmWhiteColor + coldWhiteColor;
+				color += warmWhiteColor + coolWhiteColor;
 			}
 			color = color.toUpperCase();
 			//$("#RGBController_swatch").css("background-color", color.substring(0, 7) + " !important");
@@ -291,7 +290,7 @@ var RGBController = (function (api, $) {
 		}
 		function setColor (color) {
 			if (color.length == 7) {
-				color += warmWhiteColor + coldWhiteColor;
+				color += warmWhiteColor + coolWhiteColor;
 			}
 			currentColor = color;
 			var currentDate = +new Date();
@@ -311,6 +310,7 @@ var RGBController = (function (api, $) {
 			Utils.logDebug("[RGBController.sendColor] Set color to " + currentColor + " for device " + deviceId);
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetColorTarget", {
 				actionArguments: {
+					output_format: "json",
 					newColorTargetValue: currentColor.replace("#", "")
 				},
 				onSuccess: function () {
@@ -426,9 +426,9 @@ var RGBController = (function (api, $) {
 						});
 
 					$("#RGBController_deviceTypeSelect").change(function () {
-						var rgbDeviceType = $(this).val();
-						if (typeof rgbDeviceTypes[rgbDeviceType] != "undefined") {
-							drawSpecificSettings(deviceId, rgbDeviceType, rgbDeviceTypes[rgbDeviceType].settings);
+						var selectedRgbDeviceType = $(this).val();
+						if (typeof rgbDeviceTypes[selectedRgbDeviceType] != "undefined") {
+							drawSpecificSettings(deviceId, selectedRgbDeviceType, rgbDeviceTypes[selectedRgbDeviceType].settings);
 						}
 					});
 
@@ -490,14 +490,24 @@ var RGBController = (function (api, $) {
 	function getRgbDeviceTypes (deviceId) {
 		var dfd = $.Deferred();
 		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetRGBDeviceTypes", {
-			actionArguments: {},
+			actionArguments: {
+				output_format: "json"
+			},
 			onSuccess: function (response) {
-				var xmlDoc = $.parseXML(response.responseText), $xml = $(xmlDoc), rgbDeviceTypes = $.parseJSON($xml.find("retRGBDeviceTypes").text());
-				Utils.logDebug("[RGBController.getRgbDeviceTypes] OK");
-				dfd.resolve(rgbDeviceTypes);
+				var jsonResponse = $.parseJSON(response.responseText);
+				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
+					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
+					if ($.isPlainObject(rgbDeviceTypes)) {
+						Utils.logDebug("[RGBController.getRgbDeviceTypes] OK");
+						dfd.resolve(rgbDeviceTypes);
+						return;
+					}
+				}
+				Utils.logDebug("[RGBController.getRgbDeviceTypes] KO - response: " + response.responseText);
+				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logDebug("[RGBController.getRgbDeviceTypes] KO");
+				Utils.logDebug("[RGBController.getRgbDeviceTypes] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});
@@ -510,14 +520,24 @@ var RGBController = (function (api, $) {
 	function getColorChannelNames (deviceId, options) {
 		var dfd = $.Deferred();
 		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetColorChannelNames", {
-			actionArguments: {},
+			actionArguments: {
+				output_format: "json"
+			},
 			onSuccess: function (response) {
-				var xmlDoc = $.parseXML(response.responseText), $xml = $(xmlDoc), channelNames = $.parseJSON($xml.find("retColorChannelNames").text());
-				Utils.logDebug("[RGBController.getColorChannelNames] OK");
-				dfd.resolve(channelNames);
+				var jsonResponse = $.parseJSON(response.responseText);
+				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetColorChannelNamesResponse"])) {
+					var channelNames = $.parseJSON(jsonResponse["u:GetColorChannelNamesResponse"].retColorChannelNames);
+					if ($.isArray(channelNames)) {
+						Utils.logDebug("[RGBController.getColorChannelNames] OK");
+						dfd.resolve(channelNames);
+						return;
+					}
+				}
+				Utils.logDebug("[RGBController.getColorChannelNames] KO - response: " + response.responseText);
+				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logDebug("[RGBController.getColorChannelNames] KO");
+				Utils.logDebug("[RGBController.getColorChannelNames] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});
@@ -530,14 +550,24 @@ var RGBController = (function (api, $) {
 	function getAnimationProgramNames (deviceId, options) {
 		var dfd = $.Deferred();
 		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetAnimationProgramNames", {
-			actionArguments: {},
+			actionArguments: {
+				output_format: "json"
+			},
 			onSuccess: function (response) {
-				var xmlDoc = $.parseXML(response.responseText), $xml = $(xmlDoc), programNames = $.parseJSON($xml.find("retAnimationProgramNames").text());
-				Utils.logDebug("[RGBController.getAnimationProgramNames] OK");
-				dfd.resolve(programNames);
+				var jsonResponse = $.parseJSON(response.responseText);
+				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
+					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);
+					if ($.isArray(programNames)) {
+						Utils.logDebug("[RGBController.getAnimationProgramNames] OK");
+						dfd.resolve(programNames);
+						return;
+					}
+				}
+				Utils.logDebug("[RGBController.getAnimationProgramNames] KO - response: " + response.responseText);
+				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logDebug("[RGBController.getAnimationProgramNames] KO");
+				Utils.logDebug("[RGBController.getAnimationProgramNames] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});
@@ -552,6 +582,7 @@ var RGBController = (function (api, $) {
 			Utils.logDebug("[RGBController.startAnimationProgram] Start program '" + programName + "' for device " + deviceId);
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "StartAnimationProgram", {
 				actionArguments: {
+					output_format: "json",
 					programName: programName
 				},
 				onSuccess: function () {

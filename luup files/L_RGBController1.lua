@@ -129,7 +129,7 @@ local function showErrorOnUI (methodName, lul_device, message)
 	showMessageOnUI(lul_device, "<font color=\"red\">" .. tostring(message) .. "</font>")
 end
 
-local primaryColors = { "red", "green", "blue", "warmWhite", "coldWhite" }
+local primaryColors = { "red", "green", "blue", "warmWhite", "coolWhite" }
 
 -- Set load level for a specified color and a hex value
 local primaryColorPos = {
@@ -137,7 +137,7 @@ local primaryColorPos = {
 	["green"] = { 3, 4 },
 	["blue"]  = { 5, 6 },
 	["warmWhite"] = { 7, 8 },
-	["coldWhite"] = { 9, 10 }
+	["coolWhite"] = { 9, 10 }
 }
 function getComponentColor(color, colorName)
 	local componentColor = color:sub(primaryColorPos[colorName][1], primaryColorPos[colorName][2])
@@ -214,8 +214,8 @@ local function initFromDimmerDevices (lul_device)
 	local green     = toHex(getColorDimmerLevel(lul_device, "green"))     or getComponentColor(formerColor, "green")
 	local blue      = toHex(getColorDimmerLevel(lul_device, "blue"))      or getComponentColor(formerColor, "blue")
 	local warmWhite = toHex(getColorDimmerLevel(lul_device, "warmWhite")) or getComponentColor(formerColor, "warmWhite")
-	local coldWhite = toHex(getColorDimmerLevel(lul_device, "coldWhite")) or getComponentColor(formerColor, "coldWhite")
-	local color = red .. green .. blue .. warmWhite .. coldWhite
+	local coolWhite = toHex(getColorDimmerLevel(lul_device, "coolWhite")) or getComponentColor(formerColor, "coolWhite")
+	local color = red .. green .. blue .. warmWhite .. coolWhite
 	debug("initFromDimmerDevices", "Get current color of the controlled dimmers : #" .. color)
 	if (formerColor ~= color) then
 		luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. color, lul_device)
@@ -246,11 +246,11 @@ local aliasToColor = {
 	["e3"] = "green",
 	["e4"] = "blue",
 	["e5"] = "warmWhite",
-	["e6"] = "coldWhite"
+	["e6"] = "coolWhite"
 }
 local colorToCommand = {
 	["warmWhite"] = "0x00",
-	["coldWhite"] = "0x01",
+	["coolWhite"] = "0x01",
 	["red"]   = "0x02",
 	["green"] = "0x03",
 	["blue"]  = "0x04"
@@ -340,7 +340,7 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 	end,
 
 	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coldWhite"}
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end
 }
 
@@ -365,16 +365,16 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 		pluginParams.initFromSlave = (getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "InitFromSlave", "1") == "1")
 		-- Get color aliases
 		pluginParams.colorAliases = {
-			red   = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "RedAlias",   "e2"),
-			green = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "GreenAlias", "e3"),
-			blue  = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "BlueAlias",  "e4"),
-			warmWhite = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "WhiteAlias", "e5")
+			red   = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasRed",   "e2"),
+			green = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasGreen", "e3"),
+			blue  = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasBlue",  "e4"),
+			warmWhite = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasWhite", "e5")
 		}
 		if (not RGBDeviceTypes["FGRGBWM-441"].isWatching) then
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "RedAlias", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "GreenAlias", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "BlueAlias", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "WhiteAlias", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasRed", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasGreen", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasBlue", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasWhite", lul_device)
 			RGBDeviceTypes["FGRGBWM-441"].isWatching = true
 		end
 		-- Find dimmer child devices of the Fibaro device
@@ -478,7 +478,7 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 			return false
 		end
 		pluginParams.rgbChildDeviceIds = {
-			coldWhite = lul_device
+			coolWhite = lul_device
 		}
 		return true
 	end,
@@ -490,9 +490,9 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
 		else
 			local whiteLoadLevel = luup.variable_get(SID.DIMMER, "LoadLevelStatus", pluginParams.rgbDeviceId) or 0
-			local formerColdWhite = toHex(math.ceil(tonumber(whiteLoadLevel) * 2.55))
-			debug("ZIP-RGBW.setStatus", "Switches RGBW off and restores cold white to #" .. formerColdWhite)
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, "00000000" .. formerColdWhite)
+			local formerCoolWhite = toHex(math.ceil(tonumber(whiteLoadLevel) * 2.55))
+			debug("ZIP-RGBW.setStatus", "Switches RGBW off and restores cold white to #" .. formerCoolWhite)
+			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, "00000000" .. formerCoolWhite)
 			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
 		end
 	end,
@@ -502,14 +502,14 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 		-- RGB colors and cold white can not work together
 		local rgbColor = color:sub(1, 6)
 		local warmWhiteColor = getComponentColor(color, "warmWhite")
-		local coldWhiteColor = getComponentColor(color, "coldWhite")
+		local coolWhiteColor = getComponentColor(color, "coolWhite")
 		--if ((rgbwColor ~= "00000000") and (luup.variable_get(SID.SWITCH, "Status", pluginParams.rgbDeviceId) == "1")) then
 		--	luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
 		--end
-		if (coldWhiteColor == "00") then
+		if (coolWhiteColor == "00") then
 			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, rgbColor .. warmWhiteColor .. "00")
 		else
-			setLoadLevelFromHexColor(lul_device, "coldWhite", coldWhiteColor)
+			setLoadLevelFromHexColor(lul_device, "coolWhite", coolWhiteColor)
 		end
 	end,
 
@@ -523,7 +523,7 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 	end,
 
 	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coldWhite"}
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end
 }
 
@@ -568,12 +568,12 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 		-- RGB colors and warm white can not work together
 		local rgbColor = color:sub(1, 6)
 		local warmWhiteColor = getComponentColor(color, "warmWhite")
-		local coldWhiteColor = getComponentColor(color, "coldWhite")
+		local coolWhiteColor = getComponentColor(color, "coolWhite")
 		--if ((rgbwColor ~= "00000000") and (luup.variable_get(SID.SWITCH, "Status", pluginParams.rgbDeviceId) == "1")) then
 		--	luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
 		--end
 		if (warmWhiteColor == "00") then
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, rgbColor .. "00" .. coldWhiteColor)
+			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, rgbColor .. "00" .. coolWhiteColor)
 		else
 			setLoadLevelFromHexColor(lul_device, "warmWhite", warmWhiteColor)
 		end
@@ -589,7 +589,7 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 	end,
 
 	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coldWhite"}
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end
 }
 
@@ -733,11 +733,11 @@ RGBDeviceTypes["RGBWdimmers"] = {
 		return {
 			name = "RGBW Dimmers",
 			settings = {
-				{ variable = "RedDeviceId", name = "Red", type = "dimmer" },
-				{ variable = "GreenDeviceId", name = "Green", type = "dimmer" },
-				{ variable = "BlueDeviceId", name = "Blue", type = "dimmer" },
-				{ variable = "WarmWhiteDeviceId", name = "Warm white", type = "dimmer" },
-				{ variable = "ColdWhiteDeviceId", name = "Cold white", type = "dimmer" }
+				{ variable = "DeviceIdRed", name = "Red", type = "dimmer" },
+				{ variable = "DeviceIdGreen", name = "Green", type = "dimmer" },
+				{ variable = "DeviceIdBlue", name = "Blue", type = "dimmer" },
+				{ variable = "DeviceIdWarmWhite", name = "Warm white", type = "dimmer" },
+				{ variable = "DeviceIdCoolWhite", name = "Cool white", type = "dimmer" }
 			}
 		}
 	end,
@@ -748,18 +748,18 @@ RGBDeviceTypes["RGBWdimmers"] = {
 		debug("RGBWdimmers.init", "Init")
 		-- Find dimmer devices for each color channel
 		pluginParams.rgbChildDeviceIds = {
-			red       = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "RedDeviceId", "")) or 0,
-			green     = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "GreenDeviceId", "")) or 0,
-			blue      = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "BlueDeviceId",  "")) or 0,
-			warmWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "WarmWhiteDeviceId", "")) or 0,
-			coldWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "ColdWhiteDeviceId", "")) or 0
+			red       = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdRed", "")) or 0,
+			green     = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdGreen", "")) or 0,
+			blue      = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdBlue",  "")) or 0,
+			warmWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdWarmWhite", "")) or 0,
+			coolWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdCoolWhite", "")) or 0
 		}
 		if (not RGBDeviceTypes["RGBWdimmers"].isWatching) then
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "RedDeviceId", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "GreenDeviceId", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "BlueDeviceId", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "WarmWhiteDeviceId", lul_device)
-			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "ColdWhiteDeviceId", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdRed", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdGreen", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdBlue", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdWarmWhite", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdCoolWhite", lul_device)
 			RGBDeviceTypes["RGBWdimmers"].isWatching = true
 		end
 		-- Check settings
@@ -768,7 +768,7 @@ RGBDeviceTypes["RGBWdimmers"] = {
 			and (pluginParams.rgbChildDeviceIds.green == 0)
 			and (pluginParams.rgbChildDeviceIds.blue == 0)
 			and (pluginParams.rgbChildDeviceIds.warmWhite == 0)
-			and (pluginParams.rgbChildDeviceIds.coldWhite == 0)
+			and (pluginParams.rgbChildDeviceIds.coolWhite == 0)
 		) then
 			showErrorOnUI("RGBWdimmers.init", lul_device, "At least a dimmer must be configured")
 			return false
@@ -826,7 +826,7 @@ RGBDeviceTypes["RGBWdimmers"] = {
 
 -- Set status
 function setTarget (lul_device, newTargetValue)
-	if (not pluginParams.isInitialized) then
+	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 		return
 	end
@@ -837,7 +837,7 @@ end
 
 -- Set color
 function setColorTarget (lul_device, newColor)
-	if (not pluginParams.isInitialized) then
+	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 		return
 	end
@@ -872,8 +872,7 @@ function setColorTarget (lul_device, newColor)
 
 	-- Set new color
 	debug("setColorTarget", "Set color RGBW #" .. newColor)
-	RGBDeviceTypes[ pluginParams.rgbDeviceType ].setColor(lul_device, newColor)
-
+	RGBDeviceTypes[pluginParams.rgbDeviceType].setColor(lul_device, newColor)
 end
 
 -- Get current RGBW color
@@ -884,26 +883,36 @@ end
 
 -- Start animation program
 function startAnimationProgram (lul_device, programId, programName)
-	if (not pluginParams.isInitialized) then
+	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 		return
 	end
 	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName))
-	RGBDeviceTypes[ pluginParams.rgbDeviceType ].startAnimationProgram(lul_device, programId, programName)
+	RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName)
 end
 
 -- Get animation program names
 function getAnimationProgramNames (lul_device)
 	debug("getAnimationProgramList", "Get animation program names")
-	local programNames = RGBDeviceTypes[ pluginParams.rgbDeviceType ].getAnimationProgramNames(lul_device)
-	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programNames), lul_device)
+	if (pluginParams.isConfigured) then
+		local programNames = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames(lul_device)
+		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programNames), lul_device)
+	else
+		debug("getAnimationProgramNames", "Device not initialized")
+		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", "", lul_device)
+	end
 end
 
 -- Get supported color channel names
 function getColorChannelNames (lul_device)
 	debug("getColorChannelList", "Get color channel names")
-	local channelNames = RGBDeviceTypes[ pluginParams.rgbDeviceType ].getColorChannelNames(lul_device)
-	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(channelNames), lul_device)
+	if (pluginParams.isConfigured) then
+		local channelNames = RGBDeviceTypes[ pluginParams.rgbDeviceType ].getColorChannelNames(lul_device)
+		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(channelNames), lul_device)
+	else
+		debug("getColorChannelNames", "Device not initialized")
+		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", "", lul_device)
+	end
 end
 
 -- Get RGB device types
@@ -926,9 +935,10 @@ function initPluginInstance (lul_device)
 
 	-- Get plugin params for this device
 	getVariableOrInit(lul_device, SID.SWITCH, "Status", "0")
+	getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Configured", "0")
 	getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Message", "")
 	pluginParams = {
-		isInitialized = false,
+		isConfigured = false,
 		rgbDeviceType = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceType", ""),
 		color = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Color", "#0000000000")
 	}
@@ -938,11 +948,12 @@ function initPluginInstance (lul_device)
 
 	if (type(json) == "string") then
 		showErrorOnUI("initPluginInstance", lul_device, "No JSON decoder")
-	elseif (pluginParams.rgbDeviceType == "") then
+	elseif ((pluginParams.rgbDeviceType == "") or (RGBDeviceTypes[pluginParams.rgbDeviceType] == nil)) then
 		showErrorOnUI("initPluginInstance", lul_device, "RGB device type is not set")
-	elseif (RGBDeviceTypes[ pluginParams.rgbDeviceType ].init(lul_device)) then
-		pluginParams.isInitialized = true
-		log("initPluginInstance", "Device #" .. tostring(lul_device) .. " of type " .. pluginParams.rgbDeviceType .. " is OK")
+	elseif (RGBDeviceTypes[pluginParams.rgbDeviceType].init(lul_device)) then
+		pluginParams.isConfigured = true
+		luup.variable_set(SID.RGB_CONTROLLER, "Configured", "1", lul_device)
+		log("initPluginInstance", "Device #" .. tostring(lul_device) .. " of type " .. pluginParams.rgbDeviceType .. " is correctly configured")
 		if (DEBUG_MODE) then
 			showMessageOnUI(lul_device, '<div style="color:gray;font-size:.7em;text-align:left;">Debug enabled</div>')
 		else
@@ -950,6 +961,7 @@ function initPluginInstance (lul_device)
 		end
 	else
 		error("initPluginInstance", "Device #" .. tostring(lul_device) .. " of type " .. pluginParams.rgbDeviceType .. " is KO")
+		luup.variable_set(SID.RGB_CONTROLLER, "Configured", "0", lul_device)
 	end
 end
 

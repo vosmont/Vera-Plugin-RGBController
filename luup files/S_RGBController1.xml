@@ -7,6 +7,32 @@
 	<serviceStateTable>
 		<!-- Main variables -->
 		<stateVariable>
+			<name>DeviceType</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+		</stateVariable>
+		<stateVariable>
+			<name>Configured</name>
+			<sendEventsAttribute>true</sendEventsAttribute>
+			<dataType>boolean</dataType>
+			<defaultValue>0</defaultValue>
+			<shortCode>configured</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>Color</name>
+			<sendEventsAttribute>yes</sendEventsAttribute>
+			<dataType>string</dataType>
+			<defaultValue>#0000000000</defaultValue>
+			<shortCode>color</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>Message</name>
+			<sendEventsAttribute>yes</sendEventsAttribute>
+			<dataType>string</dataType>
+			<shortCode>message</shortCode>
+		</stateVariable>
+		<!-- Specific variables -->
+		<stateVariable>
 			<name>DeviceId</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>ui2</dataType>
@@ -22,52 +48,65 @@
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>String</dataType>
 		</stateVariable>
-		<stateVariable>
-			<name>DeviceType</name>
-			<sendEventsAttribute>no</sendEventsAttribute>
-			<dataType>string</dataType>
-		</stateVariable>
-		<stateVariable>
-			<name>Color</name>
-			<sendEventsAttribute>yes</sendEventsAttribute>
-			<dataType>string</dataType>
-			<defaultValue>#00000000</defaultValue>
-			<shortCode>color</shortCode>
-		</stateVariable>
 		<!-- Color aliases -->
 		<stateVariable>
-			<name>RedAlias</name>
+			<name>AliasRed</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 			<defaultValue>e2</defaultValue>
-			<shortCode>redalias</shortCode>
+			<shortCode>aliasred</shortCode>
 		</stateVariable>
 		<stateVariable>
-			<name>GreenAlias</name>
+			<name>AliasGreen</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 			<defaultValue>e3</defaultValue>
-			<shortCode>greenalias</shortCode>
+			<shortCode>aliasgreen</shortCode>
 		</stateVariable>
 		<stateVariable>
-			<name>BlueAlias</name>
+			<name>AliasBlue</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 			<defaultValue>e4</defaultValue>
-			<shortCode>bluealias</shortCode>
+			<shortCode>aliasblue</shortCode>
 		</stateVariable>
 		<stateVariable>
-			<name>WhiteAlias</name>
+			<name>AliasWhite</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 			<defaultValue>e5</defaultValue>
-			<shortCode>whitealias</shortCode>
+			<shortCode>aliaswhite</shortCode>
+		</stateVariable>
+		<!-- Color dimmers -->
+		<stateVariable>
+			<name>DeviceIdRed</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui2</dataType>
+			<shortCode>deviceidred</shortCode>
 		</stateVariable>
 		<stateVariable>
-			<name>Message</name>
-			<sendEventsAttribute>yes</sendEventsAttribute>
-			<dataType>string</dataType>
-			<shortCode>message</shortCode>
+			<name>DeviceIdGreen</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui2</dataType>
+			<shortCode>deviceidgreen</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>DeviceIdBlue</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui2</dataType>
+			<shortCode>deviceidblue</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>DeviceIdWarmWhite</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui2</dataType>
+			<shortCode>deviceidwarmwhite</shortCode>
+		</stateVariable>
+		<stateVariable>
+			<name>DeviceIdCoolWhite</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>ui2</dataType>
+			<shortCode>deviceidcoolwhite</shortCode>
 		</stateVariable>
 		<!-- Arguments -->
 		<stateVariable>
@@ -92,15 +131,6 @@
 			<name>A_ARG_TYPE_programName</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
-			<!--
-			<allowedValueList>
-				<allowedValue>Fireplace</allowedValue>
-				<allowedValue>Storm</allowedValue>
-				<allowedValue>Rainbow</allowedValue>
-				<allowedValue>Aurora</allowedValue>
-				<allowedValue>LPD</allowedValue>
-			</allowedValueList>
-			-->
 		</stateVariable>
 		<!-- Trick of the dummy argument for computed return -->
 		<stateVariable>
