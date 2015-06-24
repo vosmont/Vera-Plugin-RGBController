@@ -770,7 +770,7 @@ RGBDeviceTypes["RGBWdimmers"] = {
 			and (pluginParams.rgbChildDeviceIds.warmWhite == 0)
 			and (pluginParams.rgbChildDeviceIds.coolWhite == 0)
 		) then
-			showErrorOnUI("RGBWdimmers.init", lul_device, "At least a dimmer must be configured")
+			showErrorOnUI("RGBWdimmers.init", lul_device, "At least one dimmer must be configured")
 			return false
 		end
 		-- Get color levels and status from the color dimmers

@@ -15,10 +15,11 @@ var RGBController = (function (api, $) {
 	}
 	pluginStyle
 		.html("\
-			#RGBController_controls { width: 400px; height: 400px; margin: 20px auto; }\
+			#RGBController_controls { width: 400px; margin: 20px auto; }\
 			#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
 			#RGBController_sliders { display: inline-block; margin-left: 50px; } \
 			#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
+			#RGBController_sliders .ui-slider-range, #RGBController_sliders .ui-slider-handle { background-image: url('');  }\
 			#RGBController_sliders .ui-slider-vertical { border-radius: 25px; }\
 			#RGBController_sliders .ui-slider-handle { width: 25px; }\
 			#RGBController_red .ui-slider-range, #RGBController_red .ui-slider-handle { background-color: #ef2929 !important; }\
@@ -86,13 +87,31 @@ var RGBController = (function (api, $) {
 				});
 			}
 		};
+	}
+	var myInterface = window.myInterface;
+	if (typeof myInterface === 'undefined') {
 		myInterface = {
-			showModalLoading: function () {},
-			hideModalLoading: function () {}
+			showModalLoading: function () {
+				if (typeof window.UIManager === 'undefined') {
+					// UI5
+					show_loading();
+				} else {
+					// ALTUI
+				}
+			},
+			hideModalLoading: function () {
+				if (typeof window.UIManager === 'undefined') {
+					// UI5
+					hide_loading();
+				} else {
+					// ALTUI
+				}
+			}
 		};
 	}
-	if (typeof window.Utils === 'undefined') {
-		window.Utils = {
+	var Utils = window.Utils;
+	if (typeof Utils === 'undefined') {
+		Utils = {
 			logError: function (message) {
 				console.error(message);
 			},
@@ -111,7 +130,7 @@ var RGBController = (function (api, $) {
 			Utils.logDebug("[RGBController.showColorWheel] Show color wheel for device " + deviceId);
 			api.setCpanelContent(
 					'<div id="RGBController_controls">'
-				+		"The plugin is not configured. Please go in tab 'Settings'"
+				+		"The plugin is not configured. Please go to the 'Settings' tab."
 				+	'</div>'
 			);
 
@@ -494,6 +513,10 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
+				// ALTUI bug
+				if (typeof response === "string") {
+					response = { responseText: response }
+				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
 					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
@@ -524,6 +547,10 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
+				// ALTUI bug
+				if (typeof response === "string") {
+					response = { responseText: response }
+				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetColorChannelNamesResponse"])) {
 					var channelNames = $.parseJSON(jsonResponse["u:GetColorChannelNamesResponse"].retColorChannelNames);
@@ -554,6 +581,10 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
+				// ALTUI bug
+				if (typeof response === "string") {
+					response = { responseText: response }
+				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
 					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);
@@ -605,10 +636,6 @@ var RGBController = (function (api, $) {
 	return myModule;
 
 })((typeof api !== 'undefined' ? api : null), jQuery);
-
-// UI5 compatibility
-var RGBController_showColorWheel = RGBController.showColorWheel;
-var RGBController_showSettings   = RGBController.showSettings;
 
 
 // *************************************************************************************************************
@@ -1018,11 +1045,19 @@ $._farbtastic = function (container, options) {
    * Helper for returning coordinates relative to the center.
    */
   fb.widgetCoords = function (event) {
-    return {
-      x: event.pageX - fb.offset.left - fb.mid,
-      y: event.pageY - fb.offset.top - fb.mid - $(window).scrollTop()
-      //y: event.pageY - fb.offset.top - fb.mid + $("#RGBController_colorWheel").position().top
-    };
+	if (typeof api === 'undefined') {
+		// UI5
+		return {
+			x: event.pageX - fb.offset.left - fb.mid,
+			y: event.pageY - fb.offset.top - fb.mid - $(window).scrollTop()
+		};
+	} else {
+		// UI7 and ALTUI
+		return {
+			x: event.pageX - fb.offset.left - fb.mid,
+			y: event.pageY - fb.offset.top - fb.mid
+		};
+	}
   }
 
   /**

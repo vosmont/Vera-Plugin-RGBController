@@ -149,7 +149,7 @@
 			"Position": "1",
 			"TabType": "javascript",
 			"ScriptName": "J_RGBController1.js",
-			"Function": "RGBController_showColorWheel"
+			"Function": "RGBController.showColorWheel"
 		},
 		{
 			"Label": {
@@ -159,7 +159,7 @@
 			"Position": "2",
 			"TabType": "javascript",
 			"ScriptName": "J_RGBController1.js",
-			"Function": "RGBController_showSettings"
+			"Function": "RGBController.showSettings"
 		},
 		{
 			"Label":{
