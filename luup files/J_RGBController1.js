@@ -92,19 +92,13 @@ var RGBController = (function (api, $) {
 	if (typeof myInterface === 'undefined') {
 		myInterface = {
 			showModalLoading: function () {
-				if (typeof window.UIManager === 'undefined') {
-					// UI5
+				if ($.isFunction(show_loading)) {
 					show_loading();
-				} else {
-					// ALTUI
 				}
 			},
 			hideModalLoading: function () {
-				if (typeof window.UIManager === 'undefined') {
-					// UI5
+				if ($.isFunction(hide_loading)) {
 					hide_loading();
-				} else {
-					// ALTUI
 				}
 			}
 		};
@@ -398,7 +392,7 @@ var RGBController = (function (api, $) {
 		if (api.version == "UI5") {
 			$("#RGBController_message").html("Settings have been modified. Please save your changes.");
 		} else {
-			$("#RGBController_message").html("Settings have been modified. Wait a few secondes for the changes to appear.");
+			$("#RGBController_message").html("Settings have been modified. Please wait a few secondes that the changes appear.");
 		}
 	}
 
@@ -513,10 +507,6 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				// ALTUI bug
-				if (typeof response === "string") {
-					response = { responseText: response }
-				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
 					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
@@ -547,10 +537,6 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				// ALTUI bug
-				if (typeof response === "string") {
-					response = { responseText: response }
-				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetColorChannelNamesResponse"])) {
 					var channelNames = $.parseJSON(jsonResponse["u:GetColorChannelNamesResponse"].retColorChannelNames);
@@ -581,10 +567,6 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				// ALTUI bug
-				if (typeof response === "string") {
-					response = { responseText: response }
-				}
 				var jsonResponse = $.parseJSON(response.responseText);
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
 					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);

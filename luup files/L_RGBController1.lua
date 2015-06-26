@@ -289,13 +289,13 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 		}
 	end,
 
-	isWatching = false,
+	_isWatching = false,
 
 	init = function (lul_device)
 		pluginParams.rgbDeviceId = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceId", "0"))
-		if (not RGBDeviceTypes.ZWaveColorDevice.isWatching) then
+		if (not RGBDeviceTypes.ZWaveColorDevice._isWatching) then
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceId", lul_device)
-			RGBDeviceTypes.ZWaveColorDevice.isWatching = true
+			RGBDeviceTypes.ZWaveColorDevice._isWatching = true
 		end
 		if (pluginParams.rgbDeviceId == 0) then
 			showErrorOnUI("ZWaveColorDevice.init",lul_device,  "RGBW device id is not set")
@@ -355,7 +355,27 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 		}
 	end,
 
-	isWatching = false,
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite"}
+	end,
+
+	_animationPrograms = {
+		["Fireplace"] = 6,
+		["Storm"]     = 7,
+		["Rainbow"]   = 8,
+		["Aurora"]    = 9,
+		["LPD"]       = 10
+	},
+
+	getAnimationProgramNames = function(lul_device)
+		local programNames = {}
+		for programName, programId in pairs(RGBDeviceTypes["FGRGBWM-441"]._animationPrograms) do
+			table.insert(programNames, programName)
+		end
+		return programNames
+	end,
+
+	_isWatching = false,
 
 	init = function (lul_device)
 		debug("FGRGBWM-441.init", "Init")
@@ -370,12 +390,12 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 			blue  = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasBlue",  "e4"),
 			warmWhite = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasWhite", "e5")
 		}
-		if (not RGBDeviceTypes["FGRGBWM-441"].isWatching) then
+		if (not RGBDeviceTypes["FGRGBWM-441"]._isWatching) then
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasRed", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasGreen", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasBlue", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasWhite", lul_device)
-			RGBDeviceTypes["FGRGBWM-441"].isWatching = true
+			RGBDeviceTypes["FGRGBWM-441"]._isWatching = true
 		end
 		-- Find dimmer child devices of the Fibaro device
 		pluginParams.rgbChildDeviceIds = {}
@@ -420,18 +440,10 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 		RGBDeviceTypes.ZWaveColorDevice.setColor(lul_device, color)
 	end,
 
-	animationPrograms = {
-		["Fireplace"] = 6,
-		["Storm"]     = 7,
-		["Rainbow"]   = 8,
-		["Aurora"]    = 9,
-		["LPD"]       = 10
-	},
-
 	startAnimationProgram = function (lul_device, programId, programName)
 		local programId = tonumber(programId) or 0
 		if (programName ~= nil) then
-			programId = RGBDeviceTypes["FGRGBWM-441"].animationPrograms[programName] or 0
+			programId = RGBDeviceTypes["FGRGBWM-441"]._animationPrograms[programName] or 0
 			if (programId > 0) then
 				debug("FGRGBWM-441.startAnimationProgram", "Retrieve program id '" .. tostring(programId).. "' from name '" .. tostring(programName) .. "'")
 			end
@@ -446,18 +458,6 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 			debug("FGRGBWM-441.startAnimationProgram", "Stop animation program")
 			setColorTarget(lul_device, "")
 		end
-	end,
-
-	getAnimationProgramNames = function(lul_device)
-		local programNames = {}
-		for programName, programId in pairs(RGBDeviceTypes["FGRGBWM-441"].animationPrograms) do
-			table.insert(programNames, programName)
-		end
-		return programNames
-	end,
-
-	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite"}
 	end
 }
 
@@ -470,6 +470,10 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
 			}
 		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end,
 
 	init = function (lul_device)
@@ -511,19 +515,6 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 		else
 			setLoadLevelFromHexColor(lul_device, "coolWhite", coolWhiteColor)
 		end
-	end,
-
-	startAnimationProgram = function (lul_device, programId, programName)
-		debug("ZIP-RGBW.startAnimationProgram", "Not implemented")
-	end,
-
-	getAnimationProgramNames = function(lul_device)
-		debug("ZIP-RGBW.getAnimationProgramList", "Not implemented")
-		return {}
-	end,
-
-	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end
 }
 
@@ -536,6 +527,10 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
 			}
 		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end,
 
 	init = function (lul_device)
@@ -577,19 +572,6 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 		else
 			setLoadLevelFromHexColor(lul_device, "warmWhite", warmWhiteColor)
 		end
-	end,
-
-	startAnimationProgram = function (lul_device, programId, programName)
-		debug("AEO_ZW098-C55.startAnimationProgram", "Not implemented")
-	end,
-
-	getAnimationProgramNames = function(lul_device)
-		debug("AEO_ZW098-C55.getAnimationProgramList", "Not implemented")
-		return {}
-	end,
-
-	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end
 }
 
@@ -605,8 +587,22 @@ RGBDeviceTypes["HYPERION"] = {
 		}
 	end,
 
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue"}
+	end,
+
+	getAnimationProgramNames = function()
+		return {
+			"Knight rider",
+			"Red mood blobs", "Green mood blobs", "Blue mood blobs", "Warm mood blobs", "Cold mood blobs", "Full color mood blobs",
+			"Rainbow mood", "Rainbow swirl", "Rainbow swirl fast",
+			"Snake",
+			"Strobe blue", "Strobe Raspbmc", "Strobe white"
+		}
+	end,
+
 	-- Send command to Hyperion JSON server by TCP
-	sendCommand = function (lul_device, command)
+	_sendCommand = function (lul_device, command)
 		if (pluginParams.rgbDeviceIp == "") then
 			return false
 		end
@@ -641,16 +637,16 @@ RGBDeviceTypes["HYPERION"] = {
 		return false
 	end,
 
-	isWatching = false,
+	_isWatching = false,
 
 	init = function (lul_device)
 		debug("HYPERION.init", "Init")
 		pluginParams.rgbDeviceIp = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIp", "")
 		pluginParams.rgbDevicePort = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DevicePort", "19444")) or 19444
-		if (not RGBDeviceTypes["HYPERION"].isWatching) then
+		if (not RGBDeviceTypes["HYPERION"]._isWatching) then
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIp", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DevicePort", lul_device)
-			RGBDeviceTypes["HYPERION"].isWatching = true
+			RGBDeviceTypes["HYPERION"]._isWatching = true
 		end
 		-- Check settings
 		if (pluginParams.rgbDeviceIp == "") then
@@ -668,7 +664,7 @@ RGBDeviceTypes["HYPERION"] = {
 			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
 		else
 			debug("HYPERION.setStatus", "Switches off")
-			RGBDeviceTypes["HYPERION"].sendCommand(lul_device, {
+			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "clearall"
 			})
 			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
@@ -677,7 +673,7 @@ RGBDeviceTypes["HYPERION"] = {
 
 	setColor = function (lul_device, color)
 		debug("HYPERION.setColor", "Set RGB color #" .. tostring(color))
-		RGBDeviceTypes["HYPERION"].sendCommand(lul_device, {
+		RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 			command = "color",
 			color = {
 				getComponentColorLevel(color, "red"),
@@ -692,7 +688,7 @@ RGBDeviceTypes["HYPERION"] = {
 	startAnimationProgram = function (lul_device, programId, programName)
 		if ((programName ~= nil) and (programName ~= "")) then
 			debug("startAnimationProgram", "Start animation program '" .. programName .. "'")
-			RGBDeviceTypes["HYPERION"].sendCommand(lul_device, {
+			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "effect",
 				effect = {
 					name = programName--,
@@ -705,25 +701,11 @@ RGBDeviceTypes["HYPERION"] = {
 			end
 		else
 			debug("startAnimationProgram", "Stop animation program")
-			RGBDeviceTypes["HYPERION"].sendCommand(lul_device, {
+			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "clear",
 				priority = 1002
 			})
 		end
-	end,
-
-	getAnimationProgramNames = function()
-		return {
-			"Knight rider",
-			"Red mood blobs", "Green mood blobs", "Blue mood blobs", "Warm mood blobs", "Cold mood blobs", "Full color mood blobs",
-			"Rainbow mood", "Rainbow swirl", "Rainbow swirl fast",
-			"Snake",
-			"Strobe blue", "Strobe Raspbmc", "Strobe white"
-		}
-	end,
-
-	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue"}
 	end
 }
 
@@ -742,7 +724,17 @@ RGBDeviceTypes["RGBWdimmers"] = {
 		}
 	end,
 
-	isWatching = false,
+	getColorChannelNames = function (lul_device)
+		local channels = {}
+		for colorName, rgbChildDeviceId in pairs(pluginParams.rgbChildDeviceIds) do
+			if (rgbChildDeviceId ~= 0) then
+				table.insert(channels, colorName)
+			end
+		end
+		return channels
+	end,
+
+	_isWatching = false,
 
 	init = function (lul_device)
 		debug("RGBWdimmers.init", "Init")
@@ -754,13 +746,13 @@ RGBDeviceTypes["RGBWdimmers"] = {
 			warmWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdWarmWhite", "")) or 0,
 			coolWhite = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceIdCoolWhite", "")) or 0
 		}
-		if (not RGBDeviceTypes["RGBWdimmers"].isWatching) then
+		if (not RGBDeviceTypes["RGBWdimmers"]._isWatching) then
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdRed", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdGreen", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdBlue", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdWarmWhite", lul_device)
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "DeviceIdCoolWhite", lul_device)
-			RGBDeviceTypes["RGBWdimmers"].isWatching = true
+			RGBDeviceTypes["RGBWdimmers"]._isWatching = true
 		end
 		-- Check settings
 		if (
@@ -798,25 +790,6 @@ RGBDeviceTypes["RGBWdimmers"] = {
 		for _, primaryColorName in ipairs(primaryColors) do
 			setLoadLevelFromHexColor(lul_device, primaryColorName, getComponentColor(color, primaryColorName))
 		end
-	end,
-
-	startAnimationProgram = function (lul_device, programId, programName)
-		debug("RGBWdimmers.startAnimationProgram", "Not implemented")
-	end,
-
-	getAnimationProgramNames = function(lul_device)
-		debug("RGBWdimmers.getAnimationProgramList", "Not implemented")
-		return {}
-	end,
-
-	getColorChannelNames = function (lul_device)
-		local channels = {}
-		for colorName, rgbChildDeviceId in pairs(pluginParams.rgbChildDeviceIds) do
-			if (rgbChildDeviceId ~= 0) then
-				table.insert(channels, colorName)
-			end
-		end
-		return channels
 	end
 }
 
@@ -826,12 +799,12 @@ RGBDeviceTypes["RGBWdimmers"] = {
 
 -- Set status
 function setTarget (lul_device, newTargetValue)
+	debug("setTarget", "Set device status : " .. tostring(newTargetValue))
 	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 		return
 	end
 	local formerStatus = luup.variable_get(SID.SWITCH, "Status", lul_device)
-	debug("setTarget", "Set device status : " .. tostring(newTargetValue))
 	RGBDeviceTypes[ pluginParams.rgbDeviceType ].setStatus(lul_device, newTargetValue)
 end
 
@@ -855,7 +828,11 @@ function setColorTarget (lul_device, newColor)
 		end
 		if (newColor:len() == 6) then
 			-- White components not sent, keep former value
-			newColor = newColor .. formerColor:sub(7, 11)
+			newColor = newColor .. formerColor:sub(7, 10)
+		end
+		if (newColor:len() == 8) then
+			-- Cool white component not sent, keep former value
+			newColor = newColor .. formerColor:sub(9, 10)
 		end
 		luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. newColor, lul_device)
 	end
@@ -883,36 +860,40 @@ end
 
 -- Start animation program
 function startAnimationProgram (lul_device, programId, programName)
+	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName))
 	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
-		return
+	elseif (type(RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram) == "function") then
+		RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName)
+	else
+		debug(pluginParams.rgbDeviceType .. ".startAnimationProgram", "Not implemented")
 	end
-	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName))
-	RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName)
 end
 
 -- Get animation program names
 function getAnimationProgramNames (lul_device)
 	debug("getAnimationProgramList", "Get animation program names")
-	if (pluginParams.isConfigured) then
-		local programNames = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames(lul_device)
-		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programNames), lul_device)
-	else
+	local programNames = {}
+	if (not pluginParams.isConfigured) then
 		debug("getAnimationProgramNames", "Device not initialized")
-		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", "", lul_device)
+	elseif (type(RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames) == "function") then
+		programNames = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames(lul_device)
+	else
+		debug(pluginParams.rgbDeviceType .. ".getAnimationProgramList", "Not implemented")
 	end
+	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programNames), lul_device)
 end
 
 -- Get supported color channel names
 function getColorChannelNames (lul_device)
 	debug("getColorChannelList", "Get color channel names")
-	if (pluginParams.isConfigured) then
-		local channelNames = RGBDeviceTypes[ pluginParams.rgbDeviceType ].getColorChannelNames(lul_device)
-		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(channelNames), lul_device)
-	else
+	local channelNames = {}
+	if (not pluginParams.isConfigured) then
 		debug("getColorChannelNames", "Device not initialized")
-		luup.variable_set(SID.RGB_CONTROLLER, "LastResult", "", lul_device)
+	else
+		channelNames = RGBDeviceTypes[ pluginParams.rgbDeviceType ].getColorChannelNames(lul_device)
 	end
+	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(channelNames), lul_device)
 end
 
 -- Get RGB device types
