@@ -37,7 +37,7 @@ var RGBController = (function (api, $) {
 				background-image: none;  border: none; background-color: black;\
 			}\
 			#RGBController_innerswatch {\
-				line-height: 25px; width: 190px; font:bold 19px arial; text-align: center;\
+				line-height: 25px; width: 180px; font:bold 19px arial; text-align: center;\
 				color: white; width 150px; display: inline-block; vertical-align: middle;\
 			}\
 			#RGBController_swatch button { height:23px; width:40px; }\
@@ -122,7 +122,7 @@ var RGBController = (function (api, $) {
 				console.error(message);
 			},
 			logDebug: function (message) {
-				if ($.isPlainObject(AltuiDebug)) {
+				if ($.isPlainObject(window.AltuiDebug)) {
 					AltuiDebug.debug(message);
 				} else {
 					//console.info(message);
