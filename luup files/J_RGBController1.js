@@ -1,10 +1,15 @@
 //@ sourceURL=J_RGBController1.js
+// Debug ON :
+//config.logLevel = UI_LOG_LEVEL_DEBUG;
 
 var RGBController = (function (api, $) {
 
 	var uuid = "e76e1855-ea23-46c0-8dda-4b1a9d852bc6";
 	var RGB_CONTROLLER_SID = "urn:upnp-org:serviceId:RGBController1";
 	var myModule = {};
+	var _deviceId = null;
+	var _rgbDeviceType = null;
+	var _color = "#0000000000";
 
 	// Inject plugin specific CSS rules
 	var pluginStyle = $("<style>");
@@ -27,12 +32,20 @@ var RGBController = (function (api, $) {
 			#RGBController_blue .ui-slider-range, #RGBController_blue .ui-slider-handle { background-color: #729fcf !important; }\
 			#RGBController_warmWhite .ui-slider-range, #RGBController_warmWhite .ui-slider-handle { background-color: #FBE616 !important; }\
 			#RGBController_coolWhite .ui-slider-range, #RGBController_coolWhite .ui-slider-handle { background-color: #FFFF88 !important; }\
-			#RGBController_swatch { height: 26px; border-radius: 25px; background-image: none; margin-top: 30px; border: none; background-color: black; }\
-			#RGBController_innerswatch { font:bold 24px arial; text-align: center; color: white; }\
-			#RGBController_program { margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
-			#RGBController_programs { width: 60%; }\
-			#RGBController_settings { width: 80%; margin: 20px auto; }\
-			#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: left; }\
+			#RGBController_swatch {\
+				height: 25px; margin-top: 30px; border-radius: 25px; padding: 1px 25px; text-align: center; \
+				background-image: none;  border: none; background-color: black;\
+			}\
+			#RGBController_innerswatch {\
+				line-height: 25px; width: 190px; font:bold 19px arial; text-align: center;\
+				color: white; width 150px; display: inline-block; vertical-align: middle;\
+			}\
+			#RGBController_swatch button { height:23px; width:40px; }\
+			#RGBController_swatch input { width:40px; height:23px; text-align:center; }\
+			#RGBController_program { height: 25px; margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
+			#RGBController_programs { width:60%; height:23px; }\
+			#RGBController_settings { width:80%; height:23px; margin: 20px auto; }\
+			#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 1px 25px; text-align: left; }\
 			#RGBController_settings .RGBController_setting span { display: inline-block; width: 30%; }\
 			#RGBController_settings .RGBController_setting select { width: 70%; }\
 			#RGBController_settings .RGBController_setting input { width: 69%; }\
@@ -41,8 +54,7 @@ var RGBController = (function (api, $) {
 		")
 		.appendTo("head");
 
-	// ***
-	// UI5 compatibility with UI7 JavaScript API
+	// UI5 and ALTUI compatibility
 	if (api === null) {
 		api = {
 			version: "UI5",
@@ -110,54 +122,126 @@ var RGBController = (function (api, $) {
 				console.error(message);
 			},
 			logDebug: function (message) {
-				//console.info(message);
+				if ($.isPlainObject(AltuiDebug)) {
+					AltuiDebug.debug(message);
+				} else {
+					//console.info(message);
+				}
 			}
 		};
 	}
-	// ***
+
+	/**
+	 * Update color wheel according to external event
+	 */
+	function onDeviceStatusChanged (deviceObjectFromLuStatus) {
+		if (deviceObjectFromLuStatus.id == _deviceId) {
+			for (i = 0; i < deviceObjectFromLuStatus.states.length; i++) { 
+				if (deviceObjectFromLuStatus.states[i].variable == "Color") {
+					var newColor = deviceObjectFromLuStatus.states[i].value;
+					if (newColor !== _color) {
+						Utils.logDebug("[RGBController.onDeviceStatusChanged] Device #" + _deviceId + " color has been set to " + newColor);
+						updateColorWheel(newColor);
+					} else {
+						Utils.logDebug("[RGBController.onDeviceStatusChanged] Device #" + _deviceId + " color is the current color " + _color);
+					}
+					return;
+				}
+			}
+		}
+	}
 
 	/**
 	 * Show color wheel panel
 	 */
 	function showColorWheel (deviceId) {
 		try {
-			Utils.logDebug("[RGBController.showColorWheel] Show color wheel for device " + deviceId);
+			_deviceId = deviceId;
+			Utils.logDebug("[RGBController.showColorWheel] Show color wheel for device " + _deviceId);
 			api.setCpanelContent(
 					'<div id="RGBController_controls">'
 				+		"The plugin is not configured. Please go to the 'Settings' tab."
 				+	'</div>'
 			);
 
-			var isConfigured = (api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Configured", {dynamic: false}) === "1");
+			var isConfigured = (api.getDeviceStateVariable(_deviceId, RGB_CONTROLLER_SID, "Configured", {dynamic: false}) === "1");
 			if (isConfigured) {
-				var rgbDeviceType = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
-				var color = "#0000000000";
-				var colorFromStateVariable = api.getDeviceStateVariable(deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
-				if (typeof colorFromStateVariable == "string") {
+				_rgbDeviceType = api.getDeviceStateVariable(_deviceId, RGB_CONTROLLER_SID, "DeviceType", {dynamic: false});
+				_color = "#0000000000";
+				var colorFromStateVariable = api.getDeviceStateVariable(_deviceId, RGB_CONTROLLER_SID, "Color", {dynamic: true});
+				if (typeof colorFromStateVariable === "string") {
 					var checkedColor = colorFromStateVariable.match(/[a-fA-F0-9]{10}/);
 					if (checkedColor != null) {
-						color = "#" + checkedColor[0];
+						_color = "#" + checkedColor[0];
 					}
 				}
-				Utils.logDebug("[RGBController.showColorWheel] RGB device type:" + rgbDeviceType + " - Color:" + color);
+				Utils.logDebug("[RGBController.showColorWheel] RGB device type:" + _rgbDeviceType + " - Color:" + _color);
 				$("#RGBController_controls").empty();
 				myInterface.showModalLoading();
 				$.when(
-					getColorChannelNames(deviceId),
-					getAnimationProgramNames(deviceId)
+					getColorChannelNames(_deviceId),
+					getAnimationProgramNames(_deviceId)
 				).then(
 					function (channelNames, programNames) {
 						myInterface.hideModalLoading();
-						drawAndManageColorWheel(deviceId, rgbDeviceType, color, channelNames, programNames);
+						drawAndManageColorWheel(_deviceId, _rgbDeviceType, _color, channelNames, programNames);
 					},
 					function (response) {
 						myInterface.hideModalLoading();
 					}
 				);
 			}
+
+			// Register
+			api.registerEventHandler("on_ui_deviceStatusChanged", myModule, "onDeviceStatusChanged");
 		} catch (err) {
 			Utils.logError('Error in RGBController.showColorWheel: ' + err);
 		}
+	}
+
+	/**
+	 * Update the color wheel
+	 */
+	function updateColorWheel (color) {
+		if ($("#RGBController_controls").size() > 0) {
+			updateColorPicker(color);
+			updateSliders(color);
+			updateSwatch(color);
+		}
+	}
+	function updateSliders (color) {
+		Utils.logDebug("[RGBController.updateSliders] Update sliders with color " + color);
+		var red = parseInt(color.substring(1, 3), 16);
+		var green = parseInt(color.substring(3, 5), 16);
+		var blue = parseInt(color.substring(5, 7), 16);
+		$("#RGBController_red").slider("value", red);
+		$("#RGBController_green").slider("value", green);
+		$("#RGBController_blue").slider("value", blue);
+		if (color.length > 7) {
+			var warmWhite = parseInt(color.substring(7, 9), 16);
+			var coolWhite = parseInt(color.substring(9, 11), 16);
+			$("#RGBController_warmWhite").slider("value", warmWhite);
+			$("#RGBController_coolWhite").slider("value", coolWhite);
+		}
+	}
+	function updateColorPicker (color) {
+		var rgbColor = color.substring(0, 7);
+		Utils.logDebug("[RGBController.updateColorPicker] Update color picker with RGB color " + rgbColor);
+		var colorPicker = $.farbtastic("#RGBController_colorpicker");
+		if (colorPicker != null) {
+			colorPicker.setColor(rgbColor, false);
+		}
+	}
+	function updateSwatch (color) {
+		color = color.toUpperCase();
+		$("#RGBController_swatch").attr('style', 'background-color: ' + color.substring(0, 7) + ' !important');
+		var colorPicker = $.farbtastic("#RGBController_colorpicker");
+		if ((colorPicker != null) && $.isArray(colorPicker.hsl) && (colorPicker.hsl[2] > 0.5)) {
+			$("#RGBController_innerswatch").css("color", "#000000");    
+		} else {
+			$("#RGBController_innerswatch").css("color", "#ffffff");  
+		}
+		$("#RGBController_innerswatch").html(color);
 	}
 
 	/**
@@ -166,14 +250,14 @@ var RGBController = (function (api, $) {
 	function drawAndManageColorWheel (deviceId, rgbDeviceType, color, channelNames, programNames) {
 		var lastSendDate = +new Date();
 		var sendTimer = 0;
-		var currentColor = color;
+		_color = color;
 		var rgbColor = color.substring(0, 7);
 		var warmWhiteColor = color.substring(7, 9);
 		var coolWhiteColor = color.substring(9, 11);
 
 		Utils.logDebug("[RGBController.drawAndManageColorWheel] Draw for device " + deviceId + " with initial color " + color);
 
-		// Color picker and sliders (according to channels)
+		// Color picker and sliders (according to channels managed by the rgb device)
 		var html = '<div id="RGBController_colorpicker"></div>'
 			+	'<div id="RGBController_sliders">';
 		var colorNames = ["red", "green", "blue", "warmWhite", "coolWhite"];
@@ -184,7 +268,11 @@ var RGBController = (function (api, $) {
 		}
 		html +=	'</div>'
 			+	'<div id="RGBController_swatch" class="ui-widget-content ui-corner-all">'
+			+		'<button id="RGBController_off" class="ui-widget-content">OFF</button>'
+			+		'<button id="RGBController_on" class="ui-widget-content">ON</button>'
 			+		'<div id="RGBController_innerswatch"></div>'
+			+		'<input type="text" value="0" id="RGBController_duration" class="ui-widget-content" title="Duration of the transition (seconds)">'
+			+		'<input type="text" value="10" id="RGBController_steps" class="ui-widget-content" title="Number of steps for the transition">'
 			+	'</div>';
 
 		// Animations
@@ -202,7 +290,23 @@ var RGBController = (function (api, $) {
 		}
 		$("#RGBController_controls").html(html);
 
-		var colorPicker = $.farbtastic("#RGBController_colorpicker", { callback:function() { }, width: 180 });
+		// Color wheel
+		$("#RGBController_colorpicker")
+			.farbtastic({
+				width: 180,
+				callback: function (pickerRgbColor) {
+					pickerRgbColor = pickerRgbColor.toUpperCase();
+					Utils.logDebug("[RGBController.onPickerUpdate] RGB is changing: " + pickerRgbColor);
+					updateSliders(pickerRgbColor);
+					updateSwatch(pickerRgbColor + warmWhiteColor + coolWhiteColor);
+					//setColor(pickerRgbColor);
+				} 
+			})
+			.bind('farbtastic.stop', function (event, pickerRgbColor) {
+				pickerRgbColor = pickerRgbColor.toUpperCase();
+				Utils.logDebug("[RGBController.onPickerUpdate] RGB has changed: " + pickerRgbColor);
+				setColor(pickerRgbColor);
+			});
 
 		// Color sliders
 		$("#RGBController_sliders div").slider({
@@ -210,9 +314,35 @@ var RGBController = (function (api, $) {
 			min: 0,
 			max: 255,
 			range: "min",
-			//slide: onSliderUpdate
-			stop: onSliderUpdate
+			stop: function () {
+				var red = $("#RGBController_red").slider("value");
+				var green = $("#RGBController_green").slider("value");
+				var blue = $("#RGBController_blue").slider("value");
+				var warmWhite = $("#RGBController_warmWhite").slider("value");
+				var coolWhite = $("#RGBController_coolWhite").slider("value");
+				var color = "#" + hexFromRGBW([red, green, blue, warmWhite, coolWhite]);
+				var newRgbColor = color.substring(0, 7);
+				warmWhiteColor = color.substring(7, 9);
+				coolWhiteColor = color.substring(9, 11);
+				Utils.logDebug("[RGBController.onSliderUpdate] RGB: " + newRgbColor  + " - Warm white: " + warmWhiteColor + " - Cool white: " + coolWhiteColor);
+				if (newRgbColor != rgbColor) {
+					rgbColor = newRgbColor;
+					updateColorPicker(rgbColor);
+				}
+				updateSwatch(color);
+				setColor(color);
+			}
 		});
+
+		// Status buttons
+		$("#RGBController_off")
+			.click(function (event) {
+				setStatus(deviceId, "0");
+			});
+		$("#RGBController_on")
+			.click(function (event) {
+				setStatus(deviceId, "1");
+			});
 
 		// Animation programs
 		$("#RGBController_program_start")
@@ -226,60 +356,10 @@ var RGBController = (function (api, $) {
 			});
 
 		// Init
-		//updateSwatch(color);
+		updateColorPicker(rgbColor);
 		updateSliders(color);
-		colorPicker.setColor(rgbColor);
-		colorPicker.linkTo(pickerUpdate);
 		updateSwatch(color);
 
-		function onSliderUpdate () {
-			var red = $("#RGBController_red").slider("value");
-			var green = $("#RGBController_green").slider("value");
-			var blue = $("#RGBController_blue").slider("value");
-			var warmWhite = $("#RGBController_warmWhite").slider("value");
-			var coolWhite = $("#RGBController_coolWhite").slider("value");
-			var color = "#" + hexFromRGBW([red, green, blue, warmWhite, coolWhite]);
-			var newRgbColor = color.substring(0, 7);
-			warmWhiteColor = color.substring(7, 9);
-			coolWhiteColor = color.substring(9, 11);
-			Utils.logDebug("[RGBController.onSliderUpdate] RGB: " + newRgbColor  + " - Warm white: " + warmWhiteColor + " - Cool white: " + coolWhiteColor);
-			if (newRgbColor != rgbColor) {
-				rgbColor = newRgbColor;
-				colorPicker.setColor(rgbColor);
-			} else {
-				updateSwatch(color);
-				setColor(color);
-			}
-		}
-		function updateSliders (color) {
-			Utils.logDebug("[RGBController.updateSliders]");
-			var red = parseInt(color.substring(1, 3), 16);
-			var green = parseInt(color.substring(3, 5), 16);
-			var blue = parseInt(color.substring(5, 7), 16);
-			$("#RGBController_red").slider("value", red);
-			$("#RGBController_green").slider("value", green);
-			$("#RGBController_blue").slider("value", blue);
-			if (color.length > 7) {
-				var warmWhite = parseInt(color.substring(7, 9), 16);
-				var coolWhite = parseInt(color.substring(9, 11), 16);
-				$("#RGBController_warmWhite").slider("value", warmWhite);
-				$("#RGBController_coolWhite").slider("value", coolWhite);
-			}
-		}
-		function updateSwatch (color) {
-			if (color.length == 7) {
-				color += warmWhiteColor + coolWhiteColor;
-			}
-			color = color.toUpperCase();
-			//$("#RGBController_swatch").css("background-color", color.substring(0, 7) + " !important");
-			$("#RGBController_swatch").attr('style', 'background-color: ' + color.substring(0, 7) + ' !important');
-			if ($.isArray(colorPicker.hsl) && (colorPicker.hsl[2] > 0.5)) {
-				$("#RGBController_innerswatch").css("color", "#000000");    
-			} else {
-				$("#RGBController_innerswatch").css("color", "#ffffff");  
-			}
-			$("#RGBController_innerswatch").html(color);
-		}
 		function hexFromRGBW (channelColors) {
 			var result = "";
 			for (i = 0; i < channelColors.length; i++) {
@@ -295,17 +375,11 @@ var RGBController = (function (api, $) {
 			}
 			return result;
 		}
-		function pickerUpdate (pickerRgbColor) {
-			pickerRgbColor = pickerRgbColor.toUpperCase();
-			updateSwatch(pickerRgbColor);
-			updateSliders(pickerRgbColor);
-			setColor(pickerRgbColor);
-		}
 		function setColor (color) {
 			if (color.length == 7) {
 				color += warmWhiteColor + coolWhiteColor;
 			}
-			currentColor = color;
+			_color = color;
 			var currentDate = +new Date();
 			if (currentDate - lastSendDate < 500) {
 				Utils.logDebug("[RGBController.setColor] Last send is too close, we have to wait");
@@ -320,17 +394,25 @@ var RGBController = (function (api, $) {
 		function sendColor() {
 			sendTimer = 0;
 			lastSendDate = +new Date();
-			Utils.logDebug("[RGBController.sendColor] Set color to " + currentColor + " for device " + deviceId);
+			var duration = parseInt($("#RGBController_duration").val(), 10);
+			var nbSteps  = $("#RGBController_steps").val();
+			if (duration > 0) {
+				Utils.logDebug("[RGBController.sendColor] Set color to " + _color + " for device " + deviceId + " in " + duration + " seconds and " + nbSteps + " steps");
+			} else {
+				Utils.logDebug("[RGBController.sendColor] Set color to " + _color + " for device " + deviceId);
+			}
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetColorTarget", {
 				actionArguments: {
 					output_format: "json",
-					newColorTargetValue: currentColor.replace("#", "")
+					newColorTargetValue: _color.replace("#", ""),
+					transitionDuration : duration,
+					transitionNbSteps  : nbSteps
 				},
 				onSuccess: function () {
 					Utils.logDebug("[RGBController.sendColor] OK");
 				},
-				onFailure: function () {
-					Utils.logDebug("[RGBController.sendColor] KO");
+				onFailure: function (response) {
+					Utils.logDebug("[RGBController.sendColor] KO - response: " + response);
 				}
 			});
 		}
@@ -511,7 +593,7 @@ var RGBController = (function (api, $) {
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
 					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
 					if ($.isPlainObject(rgbDeviceTypes)) {
-						Utils.logDebug("[RGBController.getRgbDeviceTypes] OK");
+						Utils.logDebug("[RGBController.getRgbDeviceTypes] OK - rgbDeviceTypes: " + jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
 						dfd.resolve(rgbDeviceTypes);
 						return;
 					}
@@ -541,7 +623,7 @@ var RGBController = (function (api, $) {
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetColorChannelNamesResponse"])) {
 					var channelNames = $.parseJSON(jsonResponse["u:GetColorChannelNamesResponse"].retColorChannelNames);
 					if ($.isArray(channelNames)) {
-						Utils.logDebug("[RGBController.getColorChannelNames] OK");
+						Utils.logDebug("[RGBController.getColorChannelNames] OK - channelNames: " + channelNames);
 						dfd.resolve(channelNames);
 						return;
 					}
@@ -558,6 +640,29 @@ var RGBController = (function (api, $) {
 	}
 
 	/**
+	 * Set RGB Controller status
+	 */
+	function setStatus (deviceId, status) {
+		try {
+			Utils.logDebug("[RGBController.setStatus] Set status '" + status + "' for device " + deviceId);
+			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetTarget", {
+				actionArguments: {
+					output_format: "json",
+					newTargetValue: status
+				},
+				onSuccess: function (response) {
+					Utils.logDebug("[RGBController.setStatus] OK");
+				},
+				onFailure: function (response) {
+					Utils.logDebug("[RGBController.setStatus] KO");
+				}
+			});
+		} catch (err) {
+			Utils.logError('Error in RGBController.setStatus: ' + err);
+		}
+	}
+
+	/**
 	 * Get animation program names
 	 */
 	function getAnimationProgramNames (deviceId, options) {
@@ -571,7 +676,7 @@ var RGBController = (function (api, $) {
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
 					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);
 					if ($.isArray(programNames)) {
-						Utils.logDebug("[RGBController.getAnimationProgramNames] OK");
+						Utils.logDebug("[RGBController.getAnimationProgramNames] OK - programNames: " + programNames);
 						dfd.resolve(programNames);
 						return;
 					}
@@ -598,10 +703,10 @@ var RGBController = (function (api, $) {
 					output_format: "json",
 					programName: programName
 				},
-				onSuccess: function () {
+				onSuccess: function (response) {
 					Utils.logDebug("[RGBController.startAnimationProgram] OK");
 				},
-				onFailure: function () {
+				onFailure: function (response) {
 					Utils.logDebug("[RGBController.startAnimationProgram] KO");
 				}
 			});
@@ -612,6 +717,7 @@ var RGBController = (function (api, $) {
 
 	myModule = {
 		uuid: uuid,
+		onDeviceStatusChanged: onDeviceStatusChanged,
 		showColorWheel: showColorWheel,
 		showSettings: showSettings
 	};
@@ -665,9 +771,10 @@ $._farbtastic = function (container, options) {
   fb._initialized = false;
   fb.$container = $(container);
   fb.EVENT_CHANGE = "farbtastic.change";
+  fb.EVENT_STOP   = "farbtastic.stop";
 
   /**
-   * Event Fetures
+   * Event Features
    */
   fb.emitter = $(fb);
   $.each(["on", "off", "trigger"], function(i, name){
@@ -713,13 +820,14 @@ $._farbtastic = function (container, options) {
   /**
    * Change color with HTML syntax #123456
    */
-  fb.setColor = function (color) {
+  fb.setColor = function (color, useCallback) {
+    useCallback = useCallback !== false;
     var unpack = fb.unpack(color);
     if (fb.color != color && unpack) {
       fb.color = color;
       fb.rgb = unpack;
       fb.hsl = fb.RGBToHSL(fb.rgb);
-      fb.updateDisplay();
+      fb.updateDisplay(useCallback);
     }
     return this;
   }
@@ -727,11 +835,12 @@ $._farbtastic = function (container, options) {
   /**
    * Change color with HSL triplet [0..1, 0..1, 0..1]
    */
-  fb.setHSL = function (hsl) {
+  fb.setHSL = function (hsl, useCallback) {
+    useCallback = useCallback !== false;
     fb.hsl = hsl;
     fb.rgb = fb.HSLToRGB(hsl);
     fb.color = fb.pack(fb.rgb);
-    fb.updateDisplay();
+    fb.updateDisplay(useCallback);
     return this;
   }
 
@@ -989,7 +1098,8 @@ $._farbtastic = function (container, options) {
   /**
    * Update the markers and styles
    */
-  fb.updateDisplay = function () {
+  fb.updateDisplay = function (useCallback) {
+    useCallback = useCallback !== false;
     // Determine whether labels/markers should invert.
     fb.invert = (fb.rgb[0] * 0.3 + fb.rgb[1] * .59 + fb.rgb[2] * .11) <= 0.6;
 
@@ -1014,7 +1124,7 @@ $._farbtastic = function (container, options) {
         }
       }).change();
     }
-    else if (typeof fb.callback == 'function') {
+    else if (typeof fb.callback == 'function' && useCallback) {
       fb.callback.call(fb, fb.color);
     }
     if(fb._initialized){
@@ -1095,6 +1205,11 @@ $._farbtastic = function (container, options) {
     //$(document).off('mousemove', fb.mousemove);
     //$(document).off('mouseup', fb.mouseup);
     $._farbtastic.dragging = false;
+    // vosmont : event 'stop'
+    if(fb._initialized){
+      fb.$container.trigger(fb.EVENT_STOP, [ fb.color ]);
+      fb.trigger(fb.EVENT_STOP, [ fb.color ]);
+    }
   }
 
   /* Various color utility functions */
@@ -1186,7 +1301,7 @@ $._farbtastic = function (container, options) {
   }
   // Set to gray.
   if (!fb.color){
-    fb.setColor(options.color);
+    fb.setColor(options.color, false);
   }
 
   fb._initialized = true;

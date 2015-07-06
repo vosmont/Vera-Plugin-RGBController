@@ -132,6 +132,16 @@
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_transitionDuration</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+		</stateVariable>
+		<stateVariable>
+			<name>A_ARG_TYPE_transitionNbSteps</name>
+			<sendEventsAttribute>no</sendEventsAttribute>
+			<dataType>string</dataType>
+		</stateVariable>
 		<!-- Trick of the dummy argument for computed return -->
 		<stateVariable>
 			<name>LastResult</name>
@@ -201,6 +211,16 @@
 					<name>newColorTargetValue</name>
 					<direction>in</direction>
 					<relatedStateVariable>Color</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>transitionDuration</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_transitionDuration</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>transitionNbSteps</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_transitionNbSteps</relatedStateVariable>
 				</argument>
 			</argumentList>
 		</action>

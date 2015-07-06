@@ -15,9 +15,6 @@ local SID = {
 	RGB_CONTROLLER = "urn:upnp-org:serviceId:RGBController1"
 }
 
--- Hyperion
--- See : https://github.com/tvdzwan/hyperion/wiki
-
 -------------------------------------------
 -- Plugin constants
 -------------------------------------------
@@ -116,6 +113,67 @@ local function formatToHex(dataBuf)
 end
 
 -------------------------------------------
+-- Color manipulation
+-- Inspired from https://github.com/EmmanuelOga/columns/blob/master/utils/color.lua
+-------------------------------------------
+
+-- Converts an RGB color value to HSL
+function rgbToHsl(rgb)
+	local r, g, b = rgb[1] / 255, rgb[2] / 255, rgb[3] / 255
+
+	local max, min = math.max(r, g, b), math.min(r, g, b)
+	local h, s, l
+
+	l = (max + min) / 2
+
+	if max == min then
+		h, s = 0, 0 -- achromatic
+	else
+		local d = max - min
+		--local s
+		if l > 0.5 then s = d / (2 - max - min) else s = d / (max + min) end
+		if max == r then
+			h = (g - b) / d
+			if g < b then h = h + 6 end
+		elseif max == g then h = (b - r) / d + 2
+		elseif max == b then h = (r - g) / d + 4
+		end
+		h = h / 6
+	end
+
+	return { h, s, l }
+end
+
+-- Converts an HSL color value to RGB
+function hslToRgb(hsl)
+	local h, s, l = hsl[1], hsl[2], hsl[3]
+	local r, g, b
+
+	if s == 0 then
+		r, g, b = l, l, l -- achromatic
+	else
+		function hue2rgb(p, q, t)
+			if t < 0   then t = t + 1 end
+			if t > 1   then t = t - 1 end
+			if t < 1/6 then return p + (q - p) * 6 * t end
+			if t < 1/2 then return q end
+			if t < 2/3 then return p + (q - p) * (2/3 - t) * 6 end
+			return p
+		end
+
+		local q
+		if l < 0.5 then q = l * (1 + s) else q = l + s - l * s end
+		local p = 2 * l - q
+
+		r = hue2rgb(p, q, h + 1/3)
+		g = hue2rgb(p, q, h)
+		b = hue2rgb(p, q, h - 1/3)
+	end
+
+	return { math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5) }
+end
+
+-------------------------------------------
 -- Plugin functions
 -------------------------------------------
 
@@ -131,7 +189,10 @@ end
 
 local primaryColors = { "red", "green", "blue", "warmWhite", "coolWhite" }
 
--- Set load level for a specified color and a hex value
+-------------------------------------------
+-- Component color management
+-------------------------------------------
+
 local primaryColorPos = {
 	["red"]   = { 1, 2 },
 	["green"] = { 3, 4 },
@@ -148,8 +209,19 @@ function getComponentColor(color, colorName)
 end
 function getComponentColorLevel(color, colorName)
 	local hexLevel = getComponentColor(color, colorName)
-	return math.floor(tonumber("0x" .. hexLevel) * 100/255)
+	return math.floor(tonumber("0x" .. hexLevel))
 end
+function getComponentColorLevels(color, colorNames)
+	local componentColorLevels = {}
+	for _, colorName in ipairs(colorNames) do
+		table.insert(componentColorLevels, getComponentColorLevel(color, colorName))
+	end
+	return componentColorLevels
+end
+
+-------------------------------------------
+-- External event management
+-------------------------------------------
 
 -- Changes debug level log
 function onDebugValueIsUpdated (lul_device, lul_service, lul_variable, lul_value_old, lul_value_new)
@@ -159,6 +231,18 @@ function onDebugValueIsUpdated (lul_device, lul_service, lul_variable, lul_value
 	else
 		log("onDebugValueIsUpdated", "Disable debug mode")
 		DEBUG_MODE = false
+	end
+end
+
+-- Sets RGB Controller status according to RGB device status
+function onRGBDeviceStatusChange (lul_device, lul_service, lul_variable, lul_value_old, lul_value_new)
+	local formerStatus = luup.variable_get(SID.SWITCH, "Status", pluginParams.deviceId)
+	if ((lul_value_new == "1") and (formerStatus == "0")) then
+		log("onRGBDeviceStatusChange", "RGB device has just switch on")
+		luup.variable_set(SID.SWITCH, "Status", "1", pluginParams.deviceId)
+	elseif ((lul_value_new == "0") and (formerStatus == "1")) then
+		log("onRGBDeviceStatusChange", "RGB device has just switch off")
+		luup.variable_set(SID.SWITCH, "Status", "0", pluginParams.deviceId)
 	end
 end
 
@@ -307,15 +391,27 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 			return false
 		end
 		pluginParams.rgbZwaveNode = luup.devices[pluginParams.rgbDeviceId].id
+		-- the watch should be done differently (risk of being done more than one time)
+		luup.variable_watch("onRGBDeviceStatusChange", SID.SWITCH, "Status", pluginParams.rgbDeviceId)
 		debug("ZWaveColorDevice.init", "Controlled RGBW device is device #" .. tostring(pluginParams.rgbDeviceId) .. "(" .. tostring(luup.devices[pluginParams.rgbDeviceId].description) .. ") with Z-Wave node id #" .. tostring(pluginParams.rgbZwaveNode))
 		return true
 	end,
-	
+
 	setStatus = function (lul_device, newTargetValue)
-		debug("ZWaveColorDevice.setStatus", "Not implemented")
+		debug("ZWaveColorDevice.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		if (tostring(newTargetValue) == "1") then
+			debug("ZWaveColorDevice.setStatus", "Switches on")
+			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
+			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+		else
+			debug("ZWaveColorDevice.setStatus", "Switches off")
+			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
+			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
+		end
 	end,
 
 	setColor = function (lul_device, color)
+		debug("ZWaveColorDevice.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		local data = ""
 		local nb, partialData = 0, ""
 		for _, primaryColorName in ipairs(primaryColors) do
@@ -424,19 +520,12 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 	end,
 
 	setStatus = function (lul_device, newTargetValue)
-		if (tostring(newTargetValue) == "1") then
-			debug("FGRGBWM-441.setStatus", "Switches on")
-			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
-			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
-		else
-			debug("FGRGBWM-441.setStatus", "Switches off")
-			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
-			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
-		end
+		debug("FGRGBWM-441.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		RGBDeviceTypes["ZWaveColorDevice"].setStatus(lul_device, newTargetValue)
 	end,
 
 	setColor = function (lul_device, color)
-		debug("FGRGBWM-441.setColor", "Set RGBW color #" .. tostring(color))
+		debug("FGRGBWM-441.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		RGBDeviceTypes.ZWaveColorDevice.setColor(lul_device, color)
 	end,
 
@@ -477,7 +566,7 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 	end,
 
 	init = function (lul_device)
-		debug("ZIP-RGBW.init", "Init")
+		debug("ZIP-RGBW.init", "Init for device #" .. tostring(lul_device))
 		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
 			return false
 		end
@@ -488,33 +577,14 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 	end,
 
 	setStatus = function (lul_device, newTargetValue)
-		if (tostring(newTargetValue) == "1") then
-			debug("ZIP-RGBW.setStatus", "Switches RGBW on")
-			RGBDeviceTypes["ZIP-RGBW"].setColor(lul_device, getColor(lul_device))
-			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
-		else
-			local whiteLoadLevel = luup.variable_get(SID.DIMMER, "LoadLevelStatus", pluginParams.rgbDeviceId) or 0
-			local formerCoolWhite = toHex(math.ceil(tonumber(whiteLoadLevel) * 2.55))
-			debug("ZIP-RGBW.setStatus", "Switches RGBW off and restores cold white to #" .. formerCoolWhite)
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, "00000000" .. formerCoolWhite)
-			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
-		end
+		debug("ZIP-RGBW.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		RGBDeviceTypes["ZWaveColorDevice"].setStatus(lul_device, newTargetValue)
 	end,
 
 	setColor = function (lul_device, color)
-		debug("ZIP-RGBW.setColor", "Set RGBW color #" .. tostring(color))
+		debug("ZIP-RGBW.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		-- RGB colors and cold white can not work together
-		local rgbColor = color:sub(1, 6)
-		local warmWhiteColor = getComponentColor(color, "warmWhite")
-		local coolWhiteColor = getComponentColor(color, "coolWhite")
-		--if ((rgbwColor ~= "00000000") and (luup.variable_get(SID.SWITCH, "Status", pluginParams.rgbDeviceId) == "1")) then
-		--	luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
-		--end
-		if (coolWhiteColor == "00") then
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, rgbColor .. warmWhiteColor .. "00")
-		else
-			setLoadLevelFromHexColor(lul_device, "coolWhite", coolWhiteColor)
-		end
+		RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, color)
 	end
 }
 
@@ -534,7 +604,7 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 	end,
 
 	init = function (lul_device)
-		debug("AEO_ZW098-C55.init", "Init")
+		debug("AEO_ZW098-C55.init", "Init for device #" .. tostring(lul_device))
 		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
 			return false
 		end
@@ -545,37 +615,19 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 	end,
 
 	setStatus = function (lul_device, newTargetValue)
-		if (tostring(newTargetValue) == "1") then
-			debug("AEO_ZW098-C55.setStatus", "Switches RGBW on")
-			RGBDeviceTypes["AEO_ZW098-C55"].setColor(lul_device, getColor(lul_device))
-			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
-		else
-			local whiteLoadLevel = luup.variable_get(SID.DIMMER, "LoadLevelStatus", pluginParams.rgbDeviceId) or 0
-			local formerWarmWhite = toHex(math.ceil(tonumber(whiteLoadLevel) * 2.55))
-			debug("AEO_ZW098-C55.setStatus", "Switches RGBW off and restores warm white to #" .. formerWarmWhite)
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, "000000" .. formerWarmWhite .. "00")
-			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
-		end
+		debug("AEO_ZW098-C55.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		RGBDeviceTypes["ZWaveColorDevice"].setStatus(lul_device, newTargetValue)
 	end,
 
 	setColor = function (lul_device, color)
-		debug("AEO_ZW098-C55.setColor", "Set RGBW color #" .. tostring(color))
+		debug("AEO_ZW098-C55.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		-- RGB colors and warm white can not work together
-		local rgbColor = color:sub(1, 6)
-		local warmWhiteColor = getComponentColor(color, "warmWhite")
-		local coolWhiteColor = getComponentColor(color, "coolWhite")
-		--if ((rgbwColor ~= "00000000") and (luup.variable_get(SID.SWITCH, "Status", pluginParams.rgbDeviceId) == "1")) then
-		--	luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
-		--end
-		if (warmWhiteColor == "00") then
-			RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, rgbColor .. "00" .. coolWhiteColor)
-		else
-			setLoadLevelFromHexColor(lul_device, "warmWhite", warmWhiteColor)
-		end
+		RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, color)
 	end
 }
 
 -- Hyperion Remote
+-- See : https://github.com/tvdzwan/hyperion/wiki
 RGBDeviceTypes["HYPERION"] = {
 	getParameters = function (lul_device)
 		return {
@@ -681,7 +733,7 @@ RGBDeviceTypes["HYPERION"] = {
 				getComponentColorLevel(color, "blue")
 			},
 			--duration = 5000,
-			priority = 1001
+			priority = 1002
 		})
 	end,
 
@@ -694,7 +746,7 @@ RGBDeviceTypes["HYPERION"] = {
 					name = programName--,
 					--args = {}
 				},
-				priority = 1002
+				priority = 1001
 			})
 			if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
 				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
@@ -703,7 +755,7 @@ RGBDeviceTypes["HYPERION"] = {
 			debug("startAnimationProgram", "Stop animation program")
 			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "clear",
-				priority = 1002
+				priority = 1001
 			})
 		end
 	end
@@ -797,6 +849,34 @@ RGBDeviceTypes["RGBWdimmers"] = {
 -- Main functions
 -------------------------------------------
 
+function doColorTransition(lul_device)
+	lul_device = tonumber(lul_device)
+	local ratio = pluginParams.transition.index / pluginParams.transition.nbSteps
+	--debug("doColorTransition", "ratio: " .. tostring(ratio))
+	--debug("doColorTransition", "from HslColor: " .. tostring(json.encode(pluginParams.transition.fromHslColor)) .. " RgbColor: " .. tostring(json.encode(hslToRgb(pluginParams.transition.fromHslColor))))
+	--debug("doColorTransition", "to   HslColor: " .. tostring(json.encode(pluginParams.transition.toHslColor))   .. " RgbColor: " .. tostring(json.encode(hslToRgb(pluginParams.transition.toHslColor))))
+	
+	local newH = (1 - ratio) * pluginParams.transition.fromHslColor[1] + ratio * pluginParams.transition.toHslColor[1]
+	local newS = (1 - ratio) * pluginParams.transition.fromHslColor[2] + ratio * pluginParams.transition.toHslColor[2]
+	local newL = (1 - ratio) * pluginParams.transition.fromHslColor[3] + ratio * pluginParams.transition.toHslColor[3]
+	local newHslColor = {newH, newS, newL}
+	--debug("doColorTransition", "newHslColor: " .. tostring(json.encode(newHslColor)))
+	local newRgbColor = hslToRgb(newHslColor)
+	--debug("doColorTransition", "newRgbColor: " .. tostring(json.encode(newRgbColor)))
+	local newColor = toHex(newRgbColor[1]) .. toHex(newRgbColor[2]) .. toHex(newRgbColor[3])
+	setColorTarget(lul_device, newColor)
+	--luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. newColor, lul_device)
+	--RGBDeviceTypes[pluginParams.rgbDeviceType].setColor(lul_device, newColor)
+
+	pluginParams.transition.index = pluginParams.transition.index + 1
+	if (pluginParams.transition.index <= pluginParams.transition.nbSteps) then
+		debug("doColorTransition", "Next call in " .. pluginParams.transition.interval .. " second(s)")
+		luup.call_delay("doColorTransition", pluginParams.transition.interval, lul_device)
+	else
+		debug("doColorTransition", "Color transition is ended")
+	end
+end
+
 -- Set status
 function setTarget (lul_device, newTargetValue)
 	debug("setTarget", "Set device status : " .. tostring(newTargetValue))
@@ -809,7 +889,7 @@ function setTarget (lul_device, newTargetValue)
 end
 
 -- Set color
-function setColorTarget (lul_device, newColor)
+function setColorTarget (lul_device, newColor, transitionDuration, transitionNbSteps)
 	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 		return
@@ -834,22 +914,45 @@ function setColorTarget (lul_device, newColor)
 			-- Cool white component not sent, keep former value
 			newColor = newColor .. formerColor:sub(9, 10)
 		end
-		luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. newColor, lul_device)
 	end
 
 	-- Compute device status
 	local status = luup.variable_get(SID.SWITCH, "Status", lul_device)
 	if (newColor == "0000000000") then
 		if (status == "1") then
-			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
+			setTarget(lul_device, "0")
 		end
 	elseif (status == "0") then
-		luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+		setTarget(lul_device, "1")
 	end
 
 	-- Set new color
-	debug("setColorTarget", "Set color RGBW #" .. newColor)
-	RGBDeviceTypes[pluginParams.rgbDeviceType].setColor(lul_device, newColor)
+	transitionDuration = tonumber(transitionDuration) or 0
+	if (transitionDuration < 1) then
+		transitionDuration = 0
+	end
+	transitionNbSteps  = tonumber(transitionNbSteps) or 10
+	if (transitionNbSteps < 1) then
+		transitionNbSteps = 1
+	end
+	if ((transitionDuration == 0) or (newColor == formerColor)) then
+		debug("setColorTarget", "Set color RGBW #" .. newColor)
+		luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. newColor, lul_device)
+		RGBDeviceTypes[pluginParams.rgbDeviceType].setColor(lul_device, newColor)
+	else
+		debug("setColorTarget", "Set color from RGBW #" .. formerColor .. " to RGBW #" .. newColor .. " in " .. tostring(transitionDuration) .. " seconds and " .. tostring(transitionNbSteps) .. " steps")
+		local now = os.time()
+		pluginParams.transition = {
+			deviceId = lul_device,
+			fromHslColor = rgbToHsl(getComponentColorLevels(formerColor, {"red", "green", "blue"})),
+			toHslColor   = rgbToHsl(getComponentColorLevels(newColor, {"red", "green", "blue"})),
+			index = 1,
+			nbSteps = transitionNbSteps
+		}
+		pluginParams.transition.interval = math.max(math.floor(transitionDuration / pluginParams.transition.nbSteps), 1)
+		pluginParams.transition.nbSteps = math.floor(transitionDuration / pluginParams.transition.interval)
+		doColorTransition(lul_device)
+	end
 end
 
 -- Get current RGBW color
@@ -919,6 +1022,7 @@ function initPluginInstance (lul_device)
 	getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Configured", "0")
 	getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Message", "")
 	pluginParams = {
+		deviceId = lul_device,
 		isConfigured = false,
 		rgbDeviceType = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "DeviceType", ""),
 		color = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "Color", "#0000000000")

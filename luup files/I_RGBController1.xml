@@ -73,7 +73,7 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>SetColorTarget</name>
 			<job>
-				setColorTarget(lul_device, lul_settings.newColorTargetValue)
+				setColorTarget(lul_device, lul_settings.newColorTargetValue, lul_settings.transitionDuration, lul_settings.transitionNbSteps)
 				return 4, nil
 			</job>
 		</action>
