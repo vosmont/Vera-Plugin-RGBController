@@ -1,5 +1,5 @@
 //@ sourceURL=J_RGBController1.js
-// Debug ON :
+// Debug in UI7 :
 //config.logLevel = UI_LOG_LEVEL_DEBUG;
 
 var RGBController = (function (api, $) {
@@ -10,49 +10,7 @@ var RGBController = (function (api, $) {
 	var _deviceId = null;
 	var _rgbDeviceType = null;
 	var _color = "#0000000000";
-
-	// Inject plugin specific CSS rules
-	var pluginStyle = $("<style>");
-	if ($.fn.jquery == "1.5") {
-		pluginStyle.attr("type", "text/css");
-	} else {
-		pluginStyle.prop("type", "text/css");
-	}
-	pluginStyle
-		.html("\
-			#RGBController_controls { width: 400px; margin: 20px auto; }\
-			#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
-			#RGBController_sliders { display: inline-block; margin-left: 50px; } \
-			#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
-			#RGBController_sliders .ui-slider-range, #RGBController_sliders .ui-slider-handle { background-image: url('');  }\
-			#RGBController_sliders .ui-slider-vertical { border-radius: 25px; }\
-			#RGBController_sliders .ui-slider-handle { width: 25px; }\
-			#RGBController_red .ui-slider-range, #RGBController_red .ui-slider-handle { background-color: #ef2929 !important; }\
-			#RGBController_green .ui-slider-range, #RGBController_green .ui-slider-handle { background-color: #8ae234 !important; }\
-			#RGBController_blue .ui-slider-range, #RGBController_blue .ui-slider-handle { background-color: #729fcf !important; }\
-			#RGBController_warmWhite .ui-slider-range, #RGBController_warmWhite .ui-slider-handle { background-color: #FBE616 !important; }\
-			#RGBController_coolWhite .ui-slider-range, #RGBController_coolWhite .ui-slider-handle { background-color: #FFFF88 !important; }\
-			#RGBController_swatch {\
-				height: 25px; margin-top: 30px; border-radius: 25px; padding: 1px 25px; text-align: center; \
-				background-image: none;  border: none; background-color: black;\
-			}\
-			#RGBController_innerswatch {\
-				line-height: 25px; width: 180px; font:bold 19px arial; text-align: center;\
-				color: white; width 150px; display: inline-block; vertical-align: middle;\
-			}\
-			#RGBController_swatch button { height:23px; width:40px; }\
-			#RGBController_swatch input { width:40px; height:23px; text-align:center; }\
-			#RGBController_program { height: 25px; margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
-			#RGBController_programs { width:60%; height:23px; }\
-			#RGBController_settings { width:80%; height:23px; margin: 20px auto; }\
-			#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 1px 25px; text-align: left; }\
-			#RGBController_settings .RGBController_setting span { display: inline-block; width: 30%; }\
-			#RGBController_settings .RGBController_setting select { width: 70%; }\
-			#RGBController_settings .RGBController_setting input { width: 69%; }\
-			#RGBController_specificSettings .RGBController_setting { background-color: #FBA01C !important; }\
-			#RGBController_saveSettings { text-align: center !important; background-color: #00a652 !important; }\
-		")
-		.appendTo("head");
+	var _status = "0";
 
 	// UI5 and ALTUI compatibility
 	if (api === null) {
@@ -97,6 +55,9 @@ var RGBController = (function (api, $) {
 						}
 					}
 				});
+			},
+			registerEventHandler: function (eventName, object, functionName) {
+				// Not implemented
 			}
 		};
 	}
@@ -131,6 +92,67 @@ var RGBController = (function (api, $) {
 		};
 	}
 
+	// Inject plugin specific CSS rules
+	if ($("style[title=\"RGBController custom CSS\"]").size() == 0) {
+		Utils.logDebug("[RGBController.init] Injects custom CSS");
+		var pluginStyle = $("<style>");
+		if ($.fn.jquery == "1.5") {
+			pluginStyle.attr("type", "text/css")
+				.attr("title", "RGBController custom CSS");
+		} else {
+			pluginStyle.prop("type", "text/css")
+				.prop("title", "RGBController custom CSS");
+		}
+		pluginStyle
+			.html("\
+				#RGBController_controls { width: 400px; margin: 20px auto; }\
+				#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
+				#RGBController_sliders { display: inline-block; margin-left: 50px; } \
+				#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
+				#RGBController_sliders .ui-slider-range, #RGBController_sliders .ui-slider-handle { background-image: url('');  }\
+				#RGBController_sliders .ui-slider-vertical { border-radius: 25px; }\
+				#RGBController_sliders .ui-slider-handle { width: 25px; }\
+				#RGBController_red .ui-slider-range, #RGBController_red .ui-slider-handle { background-color: #ef2929 !important; }\
+				#RGBController_green .ui-slider-range, #RGBController_green .ui-slider-handle { background-color: #8ae234 !important; }\
+				#RGBController_blue .ui-slider-range, #RGBController_blue .ui-slider-handle { background-color: #729fcf !important; }\
+				#RGBController_warmWhite .ui-slider-range, #RGBController_warmWhite .ui-slider-handle { background-color: #FBE616 !important; }\
+				#RGBController_coolWhite .ui-slider-range, #RGBController_coolWhite .ui-slider-handle { background-color: #FFFF88 !important; }\
+				#RGBController_swatch {\
+					height: 25px; margin-top: 30px; border-radius: 25px; padding: 1px 25px; text-align: center; \
+					background-image: none;  border: none; background-color: black;\
+				}\
+				#RGBController_innerswatch {\
+					line-height: 25px; width: 180px; font:bold 19px arial; text-align: center;\
+					color: white; width 150px; display: inline-block; vertical-align: middle;\
+				}\
+				#RGBController_swatch button { height:23px; width:40px; }\
+				#RGBController_swatch input { width:40px; height:23px; text-align:center; }\
+				#RGBController_program { height: 25px; margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
+				#RGBController_programs { width:60%; height:23px; }\
+				#RGBController_settings { width:80%; margin: 20px auto; }\
+				#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 1px 25px; text-align: left; }\
+				#RGBController_settings .RGBController_setting span { display: inline-block; width: 30%; }\
+				#RGBController_settings .RGBController_setting select { width: 70%; }\
+				#RGBController_settings .RGBController_setting input { width: 69%; }\
+				#RGBController_specificSettings .RGBController_setting { background: #FBA01C !important; }\
+				#RGBController_saveSettings { text-align: center !important; }\
+			")
+			.appendTo("head");
+	} else {
+		Utils.logDebug("[RGBController.init] Injection of custom CSS has already been done");
+	}
+
+	/**
+	 *
+	 */
+	function showError (response) {
+		api.setCpanelContent(
+				"<p>There has been a communication problem.</p>"
+			+	"<p>Please try to reopen this tab.</p>"
+			+	(typeof response.responseText !== 'undefined' ?  "<p>" + response.responseText + "</p>" : "" )
+		);
+	}
+
 	/**
 	 * Update color wheel according to external event
 	 */
@@ -145,7 +167,15 @@ var RGBController = (function (api, $) {
 					} else {
 						Utils.logDebug("[RGBController.onDeviceStatusChanged] Device #" + _deviceId + " color is the current color " + _color);
 					}
-					return;
+				} else if (deviceObjectFromLuStatus.states[i].variable == "Status") {
+					_status = deviceObjectFromLuStatus.states[i].value;
+					if (_status === "1") {
+						$("#RGBController_off").removeClass("ui-state-highlight");
+						$("#RGBController_on").addClass("ui-state-highlight");
+					} else {
+						$("#RGBController_off").addClass("ui-state-highlight");
+						$("#RGBController_on").removeClass("ui-state-highlight");
+					}
 				}
 			}
 		}
@@ -160,7 +190,7 @@ var RGBController = (function (api, $) {
 			Utils.logDebug("[RGBController.showColorWheel] Show color wheel for device " + _deviceId);
 			api.setCpanelContent(
 					'<div id="RGBController_controls">'
-				+		"The plugin is not configured. Please go to the 'Settings' tab."
+				+		"<p>The plugin is not configured. Please go to the 'Settings' tab.</p>"
 				+	'</div>'
 			);
 
@@ -175,6 +205,7 @@ var RGBController = (function (api, $) {
 						_color = "#" + checkedColor[0];
 					}
 				}
+				_status = api.getDeviceStateVariable(_deviceId, SWP_SID, "Status", {dynamic: true});
 				Utils.logDebug("[RGBController.showColorWheel] RGB device type:" + _rgbDeviceType + " - Color:" + _color);
 				$("#RGBController_controls").empty();
 				myInterface.showModalLoading();
@@ -183,10 +214,11 @@ var RGBController = (function (api, $) {
 					getAnimationProgramNames(_deviceId)
 				).then(
 					function (channelNames, programNames) {
-						myInterface.hideModalLoading();
 						drawAndManageColorWheel(_deviceId, _rgbDeviceType, _color, channelNames, programNames);
+						myInterface.hideModalLoading();
 					},
 					function (response) {
+						showError(response);
 						myInterface.hideModalLoading();
 					}
 				);
@@ -268,8 +300,8 @@ var RGBController = (function (api, $) {
 		}
 		html +=	'</div>'
 			+	'<div id="RGBController_swatch" class="ui-widget-content ui-corner-all">'
-			+		'<button id="RGBController_off" class="ui-widget-content">OFF</button>'
-			+		'<button id="RGBController_on" class="ui-widget-content">ON</button>'
+			+		'<button id="RGBController_off" class="ui-widget-content' + (_status === '0' ? ' ui-state-highlight' : '' ) + '">OFF</button>'
+			+		'<button id="RGBController_on" class="ui-widget-content' + (_status === '1' ? ' ui-state-highlight' : '' ) + '">ON</button>'
 			+		'<div id="RGBController_innerswatch"></div>'
 			+		'<input type="text" value="0" id="RGBController_duration" class="ui-widget-content" title="Duration of the transition (seconds)">'
 			+		'<input type="text" value="10" id="RGBController_steps" class="ui-widget-content" title="Number of steps for the transition">'
@@ -491,7 +523,6 @@ var RGBController = (function (api, $) {
 				getRgbDeviceTypes(deviceId)
 			).then(
 				function (rgbDeviceTypes) {
-					myInterface.hideModalLoading();
 					var html =	'<div id="RGBController_settings">'
 							+		'<p>To use this RGB controller, you must first choose the type of the device that you want to control, then its specific settings.</p>'
 							+		'<div class="RGBController_setting ui-widget-content ui-corner-all">'
@@ -530,8 +561,11 @@ var RGBController = (function (api, $) {
 					if (typeof rgbDeviceTypes[rgbDeviceType] != "undefined") {
 						drawSpecificSettings(deviceId, rgbDeviceType, rgbDeviceTypes[rgbDeviceType].settings);
 					}
+
+					myInterface.hideModalLoading();
 				},
 				function (response) {
+					showError(response);
 					myInterface.hideModalLoading();
 				}
 			);
@@ -589,7 +623,12 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				var jsonResponse = $.parseJSON(response.responseText);
+				var jsonResponse = null;
+				try {
+					jsonResponse = $.parseJSON(response.responseText);
+				} catch (err) {
+					Utils.logError('[RGBController.getRgbDeviceTypes] Parse JSON error: ' + err);
+				}
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
 					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
 					if ($.isPlainObject(rgbDeviceTypes)) {
@@ -619,7 +658,12 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				var jsonResponse = $.parseJSON(response.responseText);
+				var jsonResponse = null;
+				try {
+					jsonResponse = $.parseJSON(response.responseText);
+				} catch (err) {
+					Utils.logError('[RGBController.getColorChannelNames] Parse JSON error: ' + err);
+				}
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetColorChannelNamesResponse"])) {
 					var channelNames = $.parseJSON(jsonResponse["u:GetColorChannelNamesResponse"].retColorChannelNames);
 					if ($.isArray(channelNames)) {
@@ -628,11 +672,11 @@ var RGBController = (function (api, $) {
 						return;
 					}
 				}
-				Utils.logDebug("[RGBController.getColorChannelNames] KO - response: " + response.responseText);
+				Utils.logError("[RGBController.getColorChannelNames] KO - response: " + response.responseText);
 				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logDebug("[RGBController.getColorChannelNames] performActionOnDevice failure");
+				Utils.logError("[RGBController.getColorChannelNames] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});
@@ -672,7 +716,12 @@ var RGBController = (function (api, $) {
 				output_format: "json"
 			},
 			onSuccess: function (response) {
-				var jsonResponse = $.parseJSON(response.responseText);
+				var jsonResponse = null;
+				try {
+					jsonResponse = $.parseJSON(response.responseText);
+				} catch (err) {
+					Utils.logError('[RGBController.getAnimationProgramNames] Parse JSON error: ' + err);
+				}
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
 					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);
 					if ($.isArray(programNames)) {
@@ -681,11 +730,11 @@ var RGBController = (function (api, $) {
 						return;
 					}
 				}
-				Utils.logDebug("[RGBController.getAnimationProgramNames] KO - response: " + response.responseText);
+				Utils.logError("[RGBController.getAnimationProgramNames] KO - response: " + response.responseText);
 				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logDebug("[RGBController.getAnimationProgramNames] performActionOnDevice failure");
+				Utils.logError("[RGBController.getAnimationProgramNames] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});
@@ -721,6 +770,13 @@ var RGBController = (function (api, $) {
 		showColorWheel: showColorWheel,
 		showSettings: showSettings
 	};
+
+	// UI5 compatibility
+	if (api.version == "UI5") {
+		window["RGBController.showColorWheel"] = showColorWheel;
+		window["RGBController.showSettings"]   = showSettings;
+	}
+
 	return myModule;
 
 })((typeof api !== 'undefined' ? api : null), jQuery);
@@ -1141,7 +1197,7 @@ $._farbtastic = function (container, options) {
 		// UI5
 		return {
 			x: event.pageX - fb.offset.left - fb.mid,
-			y: event.pageY - fb.offset.top - fb.mid - $(window).scrollTop()
+			y: event.pageY - fb.offset.top - fb.mid + $("body").scrollTop() // Firefox bug
 		};
 	} else {
 		// UI7 and ALTUI

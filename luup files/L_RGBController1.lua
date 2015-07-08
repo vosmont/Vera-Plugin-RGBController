@@ -20,7 +20,7 @@ local SID = {
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.3"
+local PLUGIN_VERSION = "1.32"
 local DEBUG_MODE = false
 
 -------------------------------------------
