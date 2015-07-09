@@ -9,6 +9,7 @@ This plugin is able to manage RGBW color channels and animation programs.
 Compatible with
 - Fibaro FGRGB-101 (FGRGBWM-441)
 - Zipato RGBW Bulb
+- Aeotec RGBW Bulb
 - Hyperion (https://github.com/tvdzwan/hyperion/wiki)
 
 More informations here :
