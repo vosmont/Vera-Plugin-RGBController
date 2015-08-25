@@ -1,5 +1,5 @@
 -- Imports
-local json = require("dkjson")
+json = require("dkjson")
 if (type(json) == "string") then
 	json = require("json")
 end
@@ -8,7 +8,7 @@ end
 -- Constants
 -------------------------------------------
 
-local SID = {
+SID = {
 	SWITCH = "urn:upnp-org:serviceId:SwitchPower1",
 	DIMMER = "urn:upnp-org:serviceId:Dimming1",
 	ZWAVE_NETWORK = "urn:micasaverde-com:serviceId:ZWaveNetwork1",
@@ -19,22 +19,22 @@ local SID = {
 -- Plugin constants
 -------------------------------------------
 
-local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.32"
-local DEBUG_MODE = false
+PLUGIN_NAME = "RGBController"
+PLUGIN_VERSION = "1.33"
+DEBUG_MODE = false
 
 -------------------------------------------
 -- Plugin variables
 -------------------------------------------
 
-local pluginParams = {}
+pluginParams = {}
 
 -------------------------------------------
 -- UI compatibility
 -------------------------------------------
 
 -- Update static JSON file
-local function updateStaticJSONFile (lul_device, pluginName)
+function updateStaticJSONFile (lul_device, pluginName)
 	local isUpdated = false
 	if (luup.version_branch ~= 1) then
 		luup.log("ERROR - Plugin '" .. pluginName .. "' - checkStaticJSONFile : don't know how to do with this version branch " .. tostring(luup.version_branch), 1)
@@ -63,26 +63,26 @@ function getVariableOrInit (lul_device, serviceId, variableName, defaultValue)
 	return value
 end
 
-local function log(methodName, text, level)
+function log(methodName, text, level)
 	luup.log("(" .. PLUGIN_NAME .. "::" .. tostring(methodName) .. ") " .. tostring(text), (level or 50))
 end
 
-local function error(methodName, text)
+function error(methodName, text)
 	log(methodName, "ERROR: " .. tostring(text), 1)
 end
 
-local function warning(methodName, text)
+function warning(methodName, text)
 	log(methodName, "WARNING: " .. tostring(text), 2)
 end
 
-local function debug(methodName, text)
+function debug(methodName, text)
 	if (DEBUG_MODE) then
 		log(methodName, "DEBUG: " .. tostring(text))
 	end
 end
 
 -- Convert num to hex
-local function toHex(num)
+function toHex(num)
 	if (num == nil) then
 		return nil
 	end
@@ -102,7 +102,7 @@ local function toHex(num)
 	return s
 end
 
-local function formatToHex(dataBuf)
+function formatToHex(dataBuf)
 	local resultstr = ""
 	if (dataBuf ~= nil) then
 		for idx = 1, string.len(dataBuf) do
@@ -178,22 +178,22 @@ end
 -------------------------------------------
 
 -- Show message on UI
-local function showMessageOnUI (lul_device, message)
+function showMessageOnUI (lul_device, message)
 	luup.variable_set(SID.RGB_CONTROLLER, "Message", tostring(message), lul_device)
 end
 -- Show error on UI
-local function showErrorOnUI (methodName, lul_device, message)
+function showErrorOnUI (methodName, lul_device, message)
 	error(methodName, message)
 	showMessageOnUI(lul_device, "<font color=\"red\">" .. tostring(message) .. "</font>")
 end
 
-local primaryColors = { "red", "green", "blue", "warmWhite", "coolWhite" }
+primaryColors = { "red", "green", "blue", "warmWhite", "coolWhite" }
 
 -------------------------------------------
 -- Component color management
 -------------------------------------------
 
-local primaryColorPos = {
+primaryColorPos = {
 	["red"]   = { 1, 2 },
 	["green"] = { 3, 4 },
 	["blue"]  = { 5, 6 },
@@ -251,22 +251,16 @@ end
 -------------------------------------------
 
 -- Get child device for given color name
-local function getRGBChildDeviceId(lul_device, colorName)
-	--local rgbChildDeviceId = nil
-	--local colorAlias = pluginParams.colorAliases[colorName]
-	--if (colorAlias ~= nil) then
-	--	rgbChildDeviceId = pluginParams.rgbChildDeviceIds[colorAlias]
-	--end
+function getRGBChildDeviceId(lul_device, colorName)
 	local rgbChildDeviceId = pluginParams.rgbChildDeviceIds[colorName]
 	if (rgbChildDeviceId == nil) then
-		--warning("getRGBChildDeviceId", "Child not found for device " .. tostring(lul_device) .. " - color " .. tostring(colorName) .. " - colorAlias " .. tostring(colorAlias))
 		warning("getRGBChildDeviceId", "Child not found for device " .. tostring(lul_device) .. " - color " .. tostring(colorName))
 	end
 	return rgbChildDeviceId
 end
 
 -- Get level for a specified color
-local function getColorDimmerLevel(lul_device, colorName)
+function getColorDimmerLevel(lul_device, colorName)
 	local colorLevel = nil
 	local rgbChildDeviceId = getRGBChildDeviceId(lul_device, colorName)
 	if (rgbChildDeviceId ~= nil) then
@@ -277,7 +271,7 @@ local function getColorDimmerLevel(lul_device, colorName)
 end
 
 -- Set load level for a specified color and a hex value
-local function setLoadLevelFromHexColor(lul_device, colorName, hexColor)
+function setLoadLevelFromHexColor(lul_device, colorName, hexColor)
 	debug("setLoadLevelFromHexColor", "Device: " .. tostring(lul_device) .. ", colorName: " .. tostring(colorName) .. ", hexColor: " .. tostring(hexColor))
 	local rgbChildDeviceId = getRGBChildDeviceId(lul_device, colorName)
 	if (rgbChildDeviceId ~= nil) then
@@ -290,7 +284,7 @@ local function setLoadLevelFromHexColor(lul_device, colorName, hexColor)
 end
 
 -- Retrieves status from controlled rgb device
-local function initStatusFromRGBDevice (lul_device)
+function initStatusFromRGBDevice (lul_device)
 	local status = "0"
 	if (pluginParams.rgbDeviceId ~= nil) then
 		status = luup.variable_get(SID.SWITCH, "Status", pluginParams.rgbDeviceId)
@@ -306,7 +300,7 @@ local function initStatusFromRGBDevice (lul_device)
 end
 
 -- Retrieves colors from controlled dimmers
-local function initColorFromDimmerDevices (lul_device)
+function initColorFromDimmerDevices (lul_device)
 	-- Set color from color levels of the slave device
 	local formerColor = luup.variable_get(SID.RGB_CONTROLLER, "Color", lul_device)
 	formerColor = formerColor:gsub("#","")
@@ -327,21 +321,21 @@ end
 -------------------------------------------
 
 -- Set load level for a specified color and a hex value
-local aliasToColor = {
+aliasToColor = {
 	["e2"] = "red",
 	["e3"] = "green",
 	["e4"] = "blue",
 	["e5"] = "warmWhite",
 	["e6"] = "coolWhite"
 }
-local colorToCommand = {
+colorToCommand = {
 	["warmWhite"] = "0x00",
 	["coolWhite"] = "0x01",
 	["red"]   = "0x02",
 	["green"] = "0x03",
 	["blue"]  = "0x04"
 }
-local function getZWaveDataToSendFromHexColor(lul_device, colorName, hexColor)
+function getZWaveDataToSendFromHexColor(lul_device, colorName, hexColor)
 	if (pluginParams.colorAliases ~= nil) then
 		if (pluginParams.colorAliases[colorName] ~= nil) then
 			-- translation
@@ -357,7 +351,7 @@ end
 -- RGB device types
 -------------------------------------------
 
-local RGBDeviceTypes = { }
+RGBDeviceTypes = { }
 setmetatable(RGBDeviceTypes,{
 	__index = function(t, deviceTypeName)
 		return RGBDeviceTypes["ZWaveColorDevice"]
@@ -373,6 +367,15 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
 			}
 		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
+	end,
+
+	getAnimationProgramNames = function()
+		-- TODO ?
+		return {}
 	end,
 
 	_isWatching = false,
@@ -464,7 +467,7 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 		["Storm"]     = 7,
 		["Rainbow"]   = 8,
 		["Aurora"]    = 9,
-		["LPD"]       = 10
+		["LAPD"]      = 10
 	},
 
 	getAnimationProgramNames = function(lul_device)
@@ -543,6 +546,7 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 		end
 		if (programId > 0) then
 			debug("FGRGBWM-441.startAnimationProgram", "Start animation program #" .. tostring(programId))
+			-- Z-Wave command class configuration parameters
 			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x48 0x01 0x" .. toHex(programId)}, 1)
 			if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
 				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
@@ -569,6 +573,17 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end,
 
+	getAnimationProgramNames = function()
+		return {
+			"Strobe slow",
+			"Strobe medium",
+			"Strobe fast",
+			"Strobe slow random colors",
+			"Strobe medium random colors",
+			"Strobe fast random colors"
+		}
+	end,
+
 	init = function (lul_device)
 		debug("ZIP-RGBW.init", "Init for device #" .. tostring(lul_device))
 		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
@@ -586,6 +601,57 @@ RGBDeviceTypes["ZIP-RGBW"] = {
 		debug("ZIP-RGBW.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		-- RGB colors and cold white can not work together
 		RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, color)
+	end,
+
+	startAnimationProgram = function (lul_device, programId, programName)
+		if ((programName ~= nil) and (programName ~= "")) then
+			debug("ZIP-RGBW.startAnimationProgram", "Start animation program '" .. programName .. "'")
+			-- ***
+			--
+			-- Z-Wave command class configuration parameters
+			--
+			-- Configuration option 3 is used to adjust strobe light interval.
+			--  Values range from 0 to 25 in intervals of 100 milliseconds.
+			--
+			-- Configuration option 4 is used to adjust strobe light pulse count.
+			--  Values range from 0 to 250 and a special value 255 which sets infinite flashing.
+			--
+			-- Configuration option 5 is used to enable random strobe pulse colors.
+			--  Values range are 0 (turn on) or 1 (turn off).
+			--
+			-- ***
+			--]]
+
+			if string.match(programName, "random") then
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x05 0x01 0x01"}, 1)
+			else
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x05 0x01 0x00"}, 1)
+			end
+
+			if string.match(programName, "slow") then
+				-- 2.5s
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x03 0x01 0x19"}, 1)
+			end
+
+			if string.match(programName, "medium") then
+				-- 700ms
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x03 0x01 0x07"}, 1)
+			end
+
+			if string.match(programName, "fast") then
+				-- 100ms
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x03 0x01 0x01"}, 1)
+			end
+
+			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x04 0x01 0xFF"}, 1)
+			--if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
+			--	luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			--end
+		else
+			debug("ZIP-RGBW.startAnimationProgram", "Stop animation program")
+			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x04 0x01 0x00"}, 1)
+			setColorTarget(lul_device, "")
+		end
 	end
 }
 
@@ -604,10 +670,39 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 		return {"red", "green", "blue", "warmWhite", "coolWhite"}
 	end,
 
+	_defaultAnimations = '{' .. 
+		'"Rainbow slow": {"transitionStyle":0 ,"displayMode":1, "changeSpeed":127, "residenceTime":127},' ..
+		'"Rainbow fast": {"transitionStyle":0 ,"displayMode":1, "changeSpeed":5, "residenceTime":5},' ..
+		'"Strobe red": {"transitionStyle":2 , "displayMode":2, "changeSpeed":0, "residenceTime":0, "colorTransition":[0, 1]},' ..
+		'"Strobe blue": {"transitionStyle":2 , "displayMode":2, "changeSpeed":0, "residenceTime":0, "colorTransition":[0, 6]},' ..
+		'"LAPD": {"transitionStyle":1 , "displayMode":2, "changeSpeed":0, "residenceTime":0, "colorTransition":[0, 1, 6]}' ..
+	'}',
+
+	getAnimationProgramNames = function()
+		local animationNames = {}
+		for programName, animation in pairs(pluginParams.internalAnimations) do
+			table.insert(animationNames, programName)
+		end
+		return animationNames
+	end,
+
+	_isWatching = false,
+
 	init = function (lul_device)
 		debug("AEO_ZW098-C55.init", "Init for device #" .. tostring(lul_device))
 		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
 			return false
+		end
+		local jsonInternalAnimations = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "InternalAnimations", RGBDeviceTypes["AEO_ZW098-C55"]._defaultAnimations)
+		local decodeSuccess, internalAnimations = pcall(json.decode, jsonInternalAnimations)
+		if ((not decodeSuccess) or (type(internalAnimations) ~= "table")) then
+			showErrorOnUI("AEO_ZW098-C55.init", lul_device, "Internal animations decode error: " .. tostring(internalAnimations))
+		else
+			pluginParams.internalAnimations = internalAnimations
+		end
+		if (not RGBDeviceTypes["AEO_ZW098-C55"]._isWatching) then
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "InternalAnimations", lul_device)
+			RGBDeviceTypes["AEO_ZW098-C55"]._isWatching = true
 		end
 		return true
 	end,
@@ -621,6 +716,67 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 		debug("AEO_ZW098-C55.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
 		-- RGB colors and warm white can not work together
 		RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, color)
+	end,
+
+	startAnimationProgram = function (lul_device, programId, programName)
+		if ((programName ~= nil) and (programName ~= "")) then
+			debug("AEO_ZW098-C55.startAnimationProgram", "Start animation program '" .. programName .. "'")
+			local animation = pluginParams.internalAnimations[programName or ""]
+			if (animation == nil) then
+				debug("AEO_ZW098-C55.startAnimationProgram", "Animation program '" .. programName .. "' in unknown")
+				return
+			end
+			--[[
+			
+			 http://aeotec.com/z-wave-led-lightbulb/1511-led-bulb-manual.html
+			--
+			-- Parameter 37 [4 bytes] will cycle the colour displayed by LED Bulb into different modes
+			-- (MSB)
+			-- Value 1 - Colour Transition Style (2 bits)
+			--            0 - Smooth Colour Transition
+			--            1 - Fast/Direct Colour Transition
+			--            2 - Fade Out Fale In Transition
+			-- Value 1 - Reserved (2 bits)
+			-- Value 1 - Colour Display Mode (4 bits)
+			--            0 - Single Colour Mode
+			--            1 - Rainbow Mode (red, orange, yellow, green, cyan, blue, violet, pinkish)
+			--            2 - Multi Colour Mode(colours cycle between selected colours)
+			--            3 - Random Mode
+			-- Value 2 - Cycle Count (8 bits)
+			--            0 - Unlimited
+			-- Value 3 - Colour Change Speed (8 bits) - 0 is the fastest and 254 is the slowest
+			-- Value 4 - Colour Residence Time (4 bits) - 0 to 25.4 seconds
+			-- (LSB)
+			--
+			-- Parameter 38 [4 bytes] can be used to set up to 8 colours to cycle between when LED Bulb is in Multi Colour Mode.
+			-- Colours transition from Colour Index 1-8.
+			-- 1-Red 2-Orange 3-Yellow 4-Green 5-Cyan 6-Blue 7-Violet 8-Pinkish
+			--]]
+			local command
+			if (type(animation.colorTransition) == "table") then
+				command = "0x70 0x04 0x26 0x04"
+				for i = 3, 0, -1 do
+					command = command .. " 0x" .. tostring(animation.colorTransition[2*i+2] or 0) .. tostring(animation.colorTransition[2*i+1] or 0)
+				end
+				debug("AEO_ZW098-C55.startAnimationProgram", "colorTransition " .. command)
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = command}, 1)
+			end
+			command = "0x70 0x04 0x25 0x04" ..
+					 " 0x" .. toHex(((animation.transitionStyle or 0) * 64) + (animation.displayMode or 0)) ..
+					 " 0x" .. toHex(animation.cycleCount or 0) ..
+					 " 0x" .. toHex(animation.changeSpeed or 255) ..
+					 " 0x" .. toHex(animation.residenceTime or 255)
+			debug("AEO_ZW098-C55.startAnimationProgram", "colorAnimation " .. command)
+			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = command}, 1)
+
+			
+			if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
+				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			end
+		else
+			debug("AEO_ZW098-C55.startAnimationProgram", "Stop animation program")
+			setColorTarget(lul_device, "")
+		end
 	end
 }
 
@@ -737,7 +893,7 @@ RGBDeviceTypes["HYPERION"] = {
 
 	startAnimationProgram = function (lul_device, programId, programName)
 		if ((programName ~= nil) and (programName ~= "")) then
-			debug("startAnimationProgram", "Start animation program '" .. programName .. "'")
+			debug("HYPERION.startAnimationProgram", "Start animation program '" .. programName .. "'")
 			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "effect",
 				effect = {
@@ -750,7 +906,7 @@ RGBDeviceTypes["HYPERION"] = {
 				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
 			end
 		else
-			debug("startAnimationProgram", "Stop animation program")
+			debug("HYPERION.startAnimationProgram", "Stop animation program")
 			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "clear",
 				priority = 1001
@@ -858,17 +1014,11 @@ function doColorTransition(lul_device)
 		return
 	end
 	local ratio = pluginParams.transition.index / pluginParams.transition.nbSteps
-	--debug("doColorTransition", "ratio: " .. tostring(ratio))
-	--debug("doColorTransition", "from HslColor: " .. tostring(json.encode(pluginParams.transition.fromHslColor)) .. " RgbColor: " .. tostring(json.encode(hslToRgb(pluginParams.transition.fromHslColor))))
-	--debug("doColorTransition", "to   HslColor: " .. tostring(json.encode(pluginParams.transition.toHslColor))   .. " RgbColor: " .. tostring(json.encode(hslToRgb(pluginParams.transition.toHslColor))))
-	
 	local newH = (1 - ratio) * pluginParams.transition.fromHslColor[1] + ratio * pluginParams.transition.toHslColor[1]
 	local newS = (1 - ratio) * pluginParams.transition.fromHslColor[2] + ratio * pluginParams.transition.toHslColor[2]
 	local newL = (1 - ratio) * pluginParams.transition.fromHslColor[3] + ratio * pluginParams.transition.toHslColor[3]
 	local newHslColor = {newH, newS, newL}
-	--debug("doColorTransition", "newHslColor: " .. tostring(json.encode(newHslColor)))
 	local newRgbColor = hslToRgb(newHslColor)
-	--debug("doColorTransition", "newRgbColor: " .. tostring(json.encode(newRgbColor)))
 	local newColor = toHex(newRgbColor[1]) .. toHex(newRgbColor[2]) .. toHex(newRgbColor[3])
 	setColorTarget(lul_device, newColor)
 	--luup.variable_set(SID.RGB_CONTROLLER, "Color", "#" .. newColor, lul_device)
@@ -883,6 +1033,19 @@ function doColorTransition(lul_device)
 		debug("doColorTransition", "Color transition is ended")
 	end
 end
+
+-------------------------------------------
+-- Z-Wave animations
+-------------------------------------------
+
+local ZwaveAnimations = {
+	-- name = { { "color", transition, wait}  ,...}
+	["Red mood blobs"] = {{"#FF005F0000", 0, 0}, {"FFD8000000", 30, 0}, {"#FF005F0000", 30, 0}},
+	["Strobe red"] = {{"#FF00000000", 0, 1}, {"#0000000000", 0, 1}},
+	["Strobe blue"] = {{"#0000FF0000", 0, 1}, {"#0000000000", 0, 1}},
+	["Strobe warm white"] = {{"#000000FF00", 0, 1}, {"#0000000000", 0, 1}},
+	["Strobe cold white"] = {{"#00000000FF", 0, 1}, {"#0000000000", 0, 1}}
+}
 
 -------------------------------------------
 -- Main functions
