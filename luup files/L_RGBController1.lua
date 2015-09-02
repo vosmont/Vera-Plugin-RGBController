@@ -1,5 +1,5 @@
 -- Imports
-json = require("dkjson")
+local json = require("dkjson")
 if (type(json) == "string") then
 	json = require("json")
 end
@@ -8,7 +8,7 @@ end
 -- Constants
 -------------------------------------------
 
-SID = {
+local SID = {
 	SWITCH = "urn:upnp-org:serviceId:SwitchPower1",
 	DIMMER = "urn:upnp-org:serviceId:Dimming1",
 	ZWAVE_NETWORK = "urn:micasaverde-com:serviceId:ZWaveNetwork1",
@@ -19,15 +19,15 @@ SID = {
 -- Plugin constants
 -------------------------------------------
 
-PLUGIN_NAME = "RGBController"
-PLUGIN_VERSION = "1.33"
-DEBUG_MODE = false
+local PLUGIN_NAME = "RGBController"
+local PLUGIN_VERSION = "1.33"
+local DEBUG_MODE = false
 
 -------------------------------------------
 -- Plugin variables
 -------------------------------------------
 
-pluginParams = {}
+local pluginParams = {}
 
 -------------------------------------------
 -- UI compatibility
@@ -693,16 +693,19 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
 			return false
 		end
-		local jsonInternalAnimations = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "InternalAnimations", RGBDeviceTypes["AEO_ZW098-C55"]._defaultAnimations)
-		local decodeSuccess, internalAnimations = pcall(json.decode, jsonInternalAnimations)
-		if ((not decodeSuccess) or (type(internalAnimations) ~= "table")) then
-			showErrorOnUI("AEO_ZW098-C55.init", lul_device, "Internal animations decode error: " .. tostring(internalAnimations))
-		else
-			pluginParams.internalAnimations = internalAnimations
-		end
 		if (not RGBDeviceTypes["AEO_ZW098-C55"]._isWatching) then
 			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "InternalAnimations", lul_device)
 			RGBDeviceTypes["AEO_ZW098-C55"]._isWatching = true
+		end
+		local jsonInternalAnimations = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "InternalAnimations", RGBDeviceTypes["AEO_ZW098-C55"]._defaultAnimations)
+		jsonInternalAnimations = string.gsub (jsonInternalAnimations, "\n", "")
+		local decodeSuccess, internalAnimations = pcall(json.decode, jsonInternalAnimations)
+		if ((not decodeSuccess) or (type(internalAnimations) ~= "table")) then
+			pluginParams.internalAnimations = {}
+			showErrorOnUI("AEO_ZW098-C55.init", lul_device, "Internal animations decode error: " .. tostring(internalAnimations))
+			return false
+		else
+			pluginParams.internalAnimations = internalAnimations
 		end
 		return true
 	end,
@@ -727,8 +730,7 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 				return
 			end
 			--[[
-			
-			 http://aeotec.com/z-wave-led-lightbulb/1511-led-bulb-manual.html
+			-- http://aeotec.com/z-wave-led-lightbulb/1511-led-bulb-manual.html
 			--
 			-- Parameter 37 [4 bytes] will cycle the colour displayed by LED Bulb into different modes
 			-- (MSB)
@@ -752,6 +754,7 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 			-- Colours transition from Colour Index 1-8.
 			-- 1-Red 2-Orange 3-Yellow 4-Green 5-Cyan 6-Blue 7-Violet 8-Pinkish
 			--]]
+			
 			local command
 			if (type(animation.colorTransition) == "table") then
 				command = "0x70 0x04 0x26 0x04"
