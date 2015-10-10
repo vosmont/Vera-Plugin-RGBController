@@ -1037,6 +1037,49 @@ function doColorTransition(lul_device)
 	end
 end
 
+-- MySensor RGB(W)
+RGBDeviceTypes["MYS-RGBW"] = {
+	getParameters = function (lul_device)
+		return {
+			name = "MySensors RGBW",
+			settings = {
+				{ variable = "ArduinoId", name = "Arduino plugin Id", type = "string" },
+				{ variable = "RadioId",   name = "RGB Node altid",    type = "string" }
+			}
+		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
+	end,
+
+	getAnimationProgramNames = function()
+		return {
+			"Rainbow slow",
+			"Rainbow medium",
+			"Rainbow fast",
+			"Random slow colors",
+			"Random medium colors",
+			"Random fast colors",
+			"RGB fade slow colors",
+			"RGB fade medium colors",
+			"RGB fade fast colors",
+			"Multicolor fade slow colors",
+			"Multicolor fade medium colors",
+			"Multicolor fade fast colors",
+			"Current color flash slow colors",
+			"Current color flash medium colors",
+			"Current color flash fast colors",
+		}
+	end,
+
+	init = function (lul_device)
+		debug("MYS-RGBW.init", "Init for device #" .. tostring(lul_device))
+		pluginParams.rgbArduinoId = tonumber(getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "ArduinoId", ""))
+		pluginParams.rgbRadioId = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "RadioId", "")
+		return true
+	end,
+}
 -------------------------------------------
 -- Z-Wave animations
 -------------------------------------------
