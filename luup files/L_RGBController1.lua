@@ -1050,7 +1050,7 @@ RGBDeviceTypes["MYS-RGBW"] = {
 	end,
 
 	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coolWhite"}
+		return {"red", "green", "blue", "warmWhite"}
 	end,
 
 	getAnimationProgramNames = function()
@@ -1079,6 +1079,60 @@ RGBDeviceTypes["MYS-RGBW"] = {
 		pluginParams.rgbRadioId = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "RadioId", "")
 		return true
 	end,
+	
+	setStatus = function (lul_device, newTargetValue)
+		debug("MYS.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		if (tostring(newTargetValue) == "1") then
+			debug("MYS.setStatus", "Switches on ")
+			luup.call_action("urn:upnp-arduino-cc:serviceId:arduino1", "SendCommand", {variableId = "LIGHT", value = "1", radioId = pluginParams.rgbRadioId}, pluginParams.rgbArduinoId)
+			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+		else
+			debug("MYS.setStatus", "Switches off")
+                        luup.call_action("urn:upnp-arduino-cc:serviceId:arduino1", "SendCommand", {variableId = "LIGHT", value = "0", radioId = pluginParams.rgbRadioId}, pluginParams.rgbArduinoId)
+			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
+		end
+
+	end,
+
+	setColor = function (lul_device, color)
+		colorString = tostring(color)
+		debug("MYS.setColor", "Set RGBW color #" .. colorString .. " for device #" .. tostring(lul_device))
+                luup.call_action("urn:upnp-arduino-cc:serviceId:arduino1", "SendCommand", {variableId = "RGBW", value = colorString, radioId = pluginParams.rgbRadioId}, pluginParams.rgbArduinoId)
+	end,
+
+	startAnimationProgram = function (lul_device, programId, programName)
+		if ((programName ~= nil) and (programName ~= "")) then
+			--debug("MYS.startAnimationProgram", "Start animation program '" .. programName .. "'")
+			mode = 0
+			if string.match(programName, "Random") then
+				mode = 0x01
+			end
+			if string.match(programName, "RGB fade") then
+				mode = 0x02	
+			end
+			if string.match(programName, "Multicolor fade") then
+				mode = 0x03	
+			end
+			if string.match(programName, "Current color flash") then
+				mode = 0x04
+			end
+			if string.match(programName, "slow") then
+				mode = 0x10 + mode
+			end
+			if string.match(programName, "medium") then
+				mode = 0x20 + mode
+			end
+			if string.match(programName, "fast") then
+				mode = 0x30 + mode
+			end
+			debug("MYS.startAnimationProgram", "Start animation program '" .. programName .. "' " .. tostring(mode))
+			luup.call_action("urn:upnp-arduino-cc:serviceId:arduino1", "SendCommand", {variableId = "VAR_1", value = tostring(mode), radioId = pluginParams.rgbRadioId}, pluginParams.rgbArduinoId)
+		else
+			debug("MYS.startAnimationProgram", "Stop animation program")
+			luup.call_action("urn:upnp-arduino-cc:serviceId:arduino1", "SendCommand", {variableId = "VAR_1", value = "00", radioId = pluginParams.rgbRadioId}, pluginParams.rgbArduinoId)
+			setColorTarget(lul_device, "")
+		end
+	end
 }
 -------------------------------------------
 -- Z-Wave animations
