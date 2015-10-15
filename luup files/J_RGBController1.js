@@ -479,20 +479,20 @@ var RGBController = (function (api, $) {
 	}
 
 	/**
-	 * Search dimmer devices
+	 * Search devices by type
 	 */
-	function getDimmerDevices () {
-		var dimmerDevices = [];
+	function getDevicesByType (deviceType) {
+		var filteredDevices = [];
 		var devices = api.getListOfDevices();
 		var i, j;
 		for (i = 0; i < devices.length; i++) {
 			var device = devices[i];
 			//if ((device.device_type == DEVICETYPE_DIMMABLE_LIGHT) && (device.disabled == 0) && (device.id_parent == 1)) {
-			if ((device.device_type == DEVICETYPE_DIMMABLE_LIGHT) && (device.disabled == 0)) {
-				dimmerDevices.push(device);
+			if ((device.device_type === deviceType) && (device.disabled === 0)) {
+				filteredDevices.push(device);
 			}
 		}
-		return dimmerDevices;
+		return filteredDevices;
 	}
 
 	/**
@@ -593,15 +593,15 @@ var RGBController = (function (api, $) {
 					html +=	'<option value="' + rgbDevice.id + '"' + (rgbDevice.id.toString() == value ? ' selected' : '') + '>' + rgbDevice.name + ' (#' + rgbDevice.id + ')</option>';
 				}
 				html +=	'</select>';
-			} else if (setting.type == "dimmer") {
-				var dimmerDevices  = getDimmerDevices();
+			} else if (setting.deviceType != null) {
+				var filteredDevices  = getDevicesByType(setting.deviceType);
 				html +=	'<span>' + setting.name + '</span>'
 					+	'<select class="RGBController_settingValue" data-variable="' + setting.variable  + '">'
 					+		'<option value="0">-- Select a device --</option>';
 				var i;
-				for (i = 0; i < dimmerDevices.length; ++i) {
-					var dimmerDevice = dimmerDevices[i];
-					html +=	'<option value="' + dimmerDevice.id + '"' + (dimmerDevice.id.toString() == value ? ' selected' : '') + '>' + dimmerDevice.name + ' (#' + dimmerDevice.id + ')</option>';
+				for (i = 0; i < filteredDevices.length; ++i) {
+					var device = filteredDevices[i];
+					html +=	'<option value="' + device.id + '"' + (device.id.toString() == value ? ' selected' : '') + '>' + device.name + ' (#' + device.id + ')</option>';
 				}
 				html +=	'</select>';
 			} else if (setting.type == "string") {
@@ -689,7 +689,8 @@ var RGBController = (function (api, $) {
 	function setStatus (deviceId, status) {
 		try {
 			Utils.logDebug("[RGBController.setStatus] Set status '" + status + "' for device " + deviceId);
-			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetTarget", {
+			//api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "SetTarget", {
+			api.performActionOnDevice(deviceId, SWP_SID, "SetTarget", {
 				actionArguments: {
 					output_format: "json",
 					newTargetValue: status

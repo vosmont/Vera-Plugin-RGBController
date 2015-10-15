@@ -104,7 +104,7 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>StopAnimationProgram</name>
 			<job>
-				startAnimationProgram(lul_device, 0, nil)
+				stopAnimationProgram(lul_device)
 				return 4, nil
 			</job>
 		</action>
