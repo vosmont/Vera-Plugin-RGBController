@@ -1,47 +1,36 @@
 <?xml version="1.0"?>
 <implementation>
-	<files>L_RGBController1.lua</files>
-	<startup>startup</startup>
+	<functions>
+		RGBController = {}
+
+		function RGBController_startup (lul_device)
+			luup.log("RGBController startup")
+			RGBController = require("L_RGBController1")
+			if (RGBController ~= nil) then
+				return RGBController.startup( lul_device )
+			else
+				return false, "Can't load library"
+			end
+		end
+	</functions>
+	<startup>RGBController_startup</startup>
 	<actionList>
 		<!-- Parameters -->
 		<action>
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>GetRGBDeviceTypes</name>
 			<run>
-				getRGBDeviceTypes(lul_device)
+				if (RGBController ~= nil) then RGBController.getRGBDeviceTypes(lul_device) end
 			</run>
 		</action>
 		<!-- Status -->
 		<action>
-			<!-- DEPRECATED -->
-			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>SetTarget</name>
-			<job>
-				setTarget(lul_device, lul_settings.newTargetValue)
-				return 4, nil
-			</job>
-		</action>
-		<action>
-			<!-- DEPRECATED -->
-			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>GetTarget</name>
-			<run>
-				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
-			</run>
-		</action>
-		<action>
-			<!-- DEPRECATED -->
-			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>GetStatus</name>
-			<run>
-				luup.variable_get("urn:upnp-org:serviceId:SwitchPower1", "Status", lul_device)
-			</run>
-		</action>
-		<action>
 			<serviceId>urn:upnp-org:serviceId:SwitchPower1</serviceId>
 			<name>SetTarget</name>
 			<job>
-				setTarget(lul_device, lul_settings.newTargetValue)
+				if (RGBController ~= nil) then
+					RGBController.setTarget(lul_device, lul_settings.newTargetValue)
+				end
 				return 4, nil
 			</job>
 		</action>
@@ -65,7 +54,9 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>SetColor</name>
 			<job>
-				setColorTarget(lul_device, lul_settings.newColor)
+				if (RGBController ~= nil) then
+					RGBController.setColorTarget(lul_device, lul_settings.newColor)
+				end
 				return 4, nil
 			</job>
 		</action>
@@ -73,7 +64,9 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>SetColorTarget</name>
 			<job>
-				setColorTarget(lul_device, lul_settings.newColorTargetValue, lul_settings.transitionDuration, lul_settings.transitionNbSteps)
+				if (RGBController ~= nil) then
+					RGBController.setColorTarget(lul_device, lul_settings.newColorTargetValue, lul_settings.transitionDuration, lul_settings.transitionNbSteps)
+				end
 				return 4, nil
 			</job>
 		</action>
@@ -81,14 +74,14 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>GetColor</name>
 			<run>
-				getColor(lul_device)
+				if (RGBController ~= nil) then RGBController.getColor(lul_device) end
 			</run>
 		</action>
 		<action>
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>GetColorChannelNames</name>
 			<run>
-				getColorChannelNames(lul_device)
+				if (RGBController ~= nil) then RGBController.getColorChannelNames(lul_device) end
 			</run>
 		</action>
 		<!-- Animation -->
@@ -96,7 +89,9 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>StartAnimationProgram</name>
 			<job>
-				startAnimationProgram(lul_device, lul_settings.programId, lul_settings.programName)
+				if (RGBController ~= nil) then
+					RGBController.startAnimationProgram(lul_device, lul_settings.programId, lul_settings.programName)
+				end
 				return 4, nil
 			</job>
 		</action>
@@ -104,7 +99,9 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>StopAnimationProgram</name>
 			<job>
-				stopAnimationProgram(lul_device)
+				if (RGBController ~= nil) then
+					RGBController.stopAnimationProgram(lul_device)
+				end
 				return 4, nil
 			</job>
 		</action>
@@ -112,7 +109,7 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>GetAnimationProgramNames</name>
 			<run>
-				getAnimationProgramNames(lul_device)
+				if (RGBController ~= nil) then RGBController.getAnimationProgramNames(lul_device) end
 			</run>
 		</action>
 	</actionList>

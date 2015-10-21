@@ -162,48 +162,7 @@
 				</argument>
 			</argumentList>
 		</action>
-		<!-- Status -->
-		<action>
-			<!-- DEPRECATED -->
-			<name>SetTarget</name>
-			<argumentList>
-				<argument>
-					<name>newTargetValue</name>
-					<direction>in</direction>
-					<relatedStateVariable>A_ARG_TYPE_Target</relatedStateVariable>
-				</argument>
-			</argumentList>
-			<!-- DEPRECATED -->
-			<name>GetTarget</name>
-			<argumentList>
-				<argument>
-					<name>retTargetValue</name>
-					<direction>out</direction>
-					<relatedStateVariable>A_ARG_TYPE_Target</relatedStateVariable>
-				</argument>
-			</argumentList>
-			<!-- DEPRECATED -->
-			<name>GetStatus</name>
-			<argumentList>
-				<argument>
-					<name>ResultStatus</name>
-					<direction>out</direction>
-					<relatedStateVariable>A_ARG_TYPE_Status</relatedStateVariable>
-				</argument>
-			</argumentList>
-		</action>
 		<!-- Color -->
-		<action>
-			<!-- DEPRECATED -->
-			<name>SetColor</name>
-			<argumentList>
-				<argument>
-					<name>newColor</name>
-					<direction>in</direction>
-					<relatedStateVariable>Color</relatedStateVariable>
-				</argument>
-			</argumentList>
-		</action>
 		<action>
 			<name>SetColorTarget</name>
 			<argumentList>
