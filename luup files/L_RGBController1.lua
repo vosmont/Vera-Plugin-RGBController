@@ -34,7 +34,7 @@ local pluginParams = {}
 -------------------------------------------
 
 -- Update static JSON file
-function updateStaticJSONFile (lul_device, pluginName)
+local function updateStaticJSONFile (lul_device, pluginName)
 	local isUpdated = false
 	if (luup.version_branch ~= 1) then
 		luup.log("ERROR - Plugin '" .. pluginName .. "' - checkStaticJSONFile : don't know how to do with this version branch " .. tostring(luup.version_branch), 1)
