@@ -460,7 +460,7 @@ var RGBController = (function (api, $) {
 		for (i = 0; i < devices.length; i++) {
 			var device = devices[i];
 			if (
-				((device.device_type === DEVICETYPE_DIMMABLE_LIGHT) || (device.device_type === "urn:schemas-upnp-org:device:DimmableRGBLight:1"))
+				((device.device_type === DEVICETYPE_DIMMABLE_LIGHT) || (device.device_type.indexOf("urn:schemas-upnp-org:device:DimmableRGBLight") > -1))
 				&& (device.disabled == 0) && (device.id_parent == 1)
 			) {
 				// Check if device responds to Z-Wave Color Command Class
