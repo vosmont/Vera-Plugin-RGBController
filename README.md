@@ -22,7 +22,7 @@ Compatible with
 <br/>
 <br/>
 
-**Compatible with UI5 & UI7 / VeraPlus, VeraEdge, Vera3, VeraLite / openLuup**
+**Compatible with UI5 & UI7 / VeraPlus, VeraEdge, Vera3, VeraLite / [openLuup](https://github.com/akbooer/openLuup)**
 
 More informations here :
 - http://forum.micasaverde.com/index.php/topic,32613.0.html
