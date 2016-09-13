@@ -1,19 +1,17 @@
-# ![rgbcontroller](media/rgbcontroller_logo.png) Vera-Plugin-RGBController
+# <img align="left" src="media/rgbcontroller_logo.png"> Vera-Plugin-RGBController
 
-Plugin for [Vera Control, Ltd.](http://getvera.com/) Home Controller (VeraPlus, VeraEdge, Vera3, VeraLite).
+Manage RGBW color channels and animation programs of Z-wave devices.
 
-**Compatible with UI5 & UI7**
-
-This plugin is able to manage RGBW color channels and animation programs.
+<img align="left" src="media/rgbcontroller_panel.png"> Designed for [Vera Control, Ltd.](http://getvera.com/) Home Controllers.
 
 Compatible with
-- Fibaro FGRGB-101 (FGRGBWM-441)
-- Zipato RGBW Bulb
-- Aeotec RGBW Bulb
-- Hyperion (https://github.com/tvdzwan/hyperion/wiki)
+- [X] Fibaro FGRGB-101 (FGRGBWM-441)
+- [X] Zipato RGBW Bulb
+- [X] Aeotec RGBW Bulb
+- [X] Hyperion (https://github.com/tvdzwan/hyperion/wiki)
+
+**Compatible with UI5 & UI7 / VeraPlus, VeraEdge, Vera3, VeraLite / openLuup**
 
 More informations here :
 - http://forum.micasaverde.com/index.php/topic,32613.0.html
 - http://www.touteladomotique.com/forum/viewtopic.php?f=48&t=14736 (in French)
-
-![rgbcontroller panel](media/rgbcontroller_panel.png)
