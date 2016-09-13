@@ -1,6 +1,6 @@
-# Vera-Plugin-RGBController
+# ![rgbcontroller](media/rgbcontroller_logo.png) Vera-Plugin-RGBController
 
-Plugin for [getVera](http://getvera.com/) Home Controller (VeraEdge, Vera3, VeraLite).
+Plugin for [getVera](http://getvera.com/) Home Controller (VeraPlus, VeraEdge, Vera3, VeraLite).
 
 **Compatible with UI5 & UI7**
 
@@ -15,3 +15,5 @@ Compatible with
 More informations here :
 - http://forum.micasaverde.com/index.php/topic,32613.0.html
 - http://www.touteladomotique.com/forum/viewtopic.php?f=48&t=14736 (in French)
+
+![rgbcontroller panel](media/rgbcontroller_panel.png)
