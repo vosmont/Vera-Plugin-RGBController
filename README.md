@@ -1,6 +1,6 @@
 # ![rgbcontroller](media/rgbcontroller_logo.png) Vera-Plugin-RGBController
 
-Plugin for [getVera](http://getvera.com/) Home Controller (VeraPlus, VeraEdge, Vera3, VeraLite).
+Plugin for [Vera Control, Ltd.](http://getvera.com/) Home Controller (VeraPlus, VeraEdge, Vera3, VeraLite).
 
 **Compatible with UI5 & UI7**
 
