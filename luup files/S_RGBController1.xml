@@ -122,23 +122,19 @@
 			<defaultValue>0</defaultValue>
 		</stateVariable>
 		<stateVariable>
-			<name>A_ARG_TYPE_programId</name>
+			<name>A_ARG_TYPE_UI1</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>ui1</dataType>
 			<defaultValue>0</defaultValue>
 		</stateVariable>
 		<stateVariable>
-			<name>A_ARG_TYPE_programName</name>
+			<name>A_ARG_TYPE_UI4</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
-			<dataType>string</dataType>
+			<dataType>ui4</dataType>
+			<defaultValue>0</defaultValue>
 		</stateVariable>
 		<stateVariable>
-			<name>A_ARG_TYPE_transitionDuration</name>
-			<sendEventsAttribute>no</sendEventsAttribute>
-			<dataType>string</dataType>
-		</stateVariable>
-		<stateVariable>
-			<name>A_ARG_TYPE_transitionNbSteps</name>
+			<name>A_ARG_TYPE_STRING</name>
 			<sendEventsAttribute>no</sendEventsAttribute>
 			<dataType>string</dataType>
 		</stateVariable>
@@ -215,12 +211,12 @@
 				<argument>
 					<name>transitionDuration</name>
 					<direction>in</direction>
-					<relatedStateVariable>A_ARG_TYPE_transitionDuration</relatedStateVariable>
+					<relatedStateVariable>A_ARG_TYPE_UI4</relatedStateVariable>
 				</argument>
 				<argument>
 					<name>transitionNbSteps</name>
 					<direction>in</direction>
-					<relatedStateVariable>A_ARG_TYPE_transitionNbSteps</relatedStateVariable>
+					<relatedStateVariable>A_ARG_TYPE_UI1</relatedStateVariable>
 				</argument>
 			</argumentList>
 		</action>
@@ -251,12 +247,22 @@
 				<argument>
 					<name>programId</name>
 					<direction>in</direction>
-					<relatedStateVariable>A_ARG_TYPE_programId</relatedStateVariable>
+					<relatedStateVariable>A_ARG_TYPE_UI1</relatedStateVariable>
 				</argument>
 				<argument>
 					<name>programName</name>
 					<direction>in</direction>
-					<relatedStateVariable>A_ARG_TYPE_programName</relatedStateVariable>
+					<relatedStateVariable>A_ARG_TYPE_STRING</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>programDuration</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_UI4</relatedStateVariable>
+				</argument>
+				<argument>
+					<name>programSpeed</name>
+					<direction>in</direction>
+					<relatedStateVariable>A_ARG_TYPE_UI1</relatedStateVariable>
 				</argument>
 			</argumentList>
 		</action>
@@ -266,10 +272,10 @@
 			</argumentList>
 		</action>
 		<action>
-			<name>GetAnimationProgramNames</name>
+			<name>GetAnimationPrograms</name>
 			<argumentList>
 				<argument>
-					<name>retAnimationProgramNames</name>
+					<name>retAnimationPrograms</name>
 					<direction>out</direction>
 					<relatedStateVariable>LastResult</relatedStateVariable>
 				</argument>

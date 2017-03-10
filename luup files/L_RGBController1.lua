@@ -1,6 +1,14 @@
+--[[
+  This file is part of the plugin RGB Controller.
+  https://github.com/vosmont/Vera-Plugin-RgbController
+  Copyright (c) 2017 Vincent OSMONT
+  This code is released under the MIT License, see LICENSE.
+--]]
+
 -- Imports
-local json = require("dkjson")
-if (type(json) == "string") then
+local status, json = pcall(require, "dkjson")
+if (type(json) ~= "table") then
+	-- UI5
 	json = require("json")
 end
 
@@ -20,7 +28,7 @@ local SID = {
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.34"
+local PLUGIN_VERSION = "1.40"
 local DEBUG_MODE = false
 
 -------------------------------------------
@@ -83,6 +91,7 @@ end
 
 -- Convert num to hex
 function toHex(num)
+	num = tonumber(num)
 	if (num == nil) then
 		return nil
 	end
@@ -351,6 +360,21 @@ end
 -- RGB device types
 -------------------------------------------
 
+function getKeysSortedByValue(tbl, sortFunction)
+	local keys = {}
+	for key in pairs(tbl) do
+		table.insert(keys, key)
+	end
+	if (type(sortFunction) ~= "function") then
+		sortFunction = function(a, b) return a < b end
+	end
+	table.sort(keys, function(a, b)
+		return sortFunction(tbl[a], tbl[b])
+	end)
+	return keys
+end
+
+
 RGBDeviceTypes = { }
 setmetatable(RGBDeviceTypes,{
 	__index = function(t, deviceTypeName)
@@ -362,7 +386,7 @@ setmetatable(RGBDeviceTypes,{
 RGBDeviceTypes["ZWaveColorDevice"] = {
 	getParameters = function (lul_device)
 		return {
-			name = "Generic Z-Wave color device",
+			name = "_Generic Z-Wave color device",
 			settings = {
 				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
 			}
@@ -407,10 +431,20 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 	setStatus = function (lul_device, newTargetValue)
 		debug("ZWaveColorDevice.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
 		if (tostring(newTargetValue) == "1") then
-			debug("ZWaveColorDevice.setStatus", "Switches on")
-			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
-			luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			-- Restore the former load level
+			local loadLevel = luup.variable_get( SID.RGB_CONTROLLER, "LoadLevelStatus", lul_device )
+			if loadLevel then
+				debug( lul_device, self, "setStatus", "Set former loal level '" .. tostring( loadLevel ) .. "'" )
+				luup.call_action( SID.DIMMER, "SetLoadLevelTarget", { newLoadlevelTarget = loadLevel }, instanceParams.rgbDeviceId )
+			else
+				debug("ZWaveColorDevice.setStatus", "Switches on")
+				luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
+				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			end
 		else
+			-- Store the current load level
+			local loadLevel = luup.variable_get( SID.DIMMER, "LoadLevelStatus", pluginParams.rgbDeviceId )
+			luup.variable_set( SID.RGB_CONTROLLER, "LoadLevelStatus", loadLevel, lul_device )
 			debug("ZWaveColorDevice.setStatus", "Switches off")
 			luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "0"}, pluginParams.rgbDeviceId)
 			luup.variable_set(SID.SWITCH, "Status", "0", lul_device)
@@ -471,11 +505,7 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 	},
 
 	getAnimationProgramNames = function(lul_device)
-		local programNames = {}
-		for programName, programId in pairs(RGBDeviceTypes["FGRGBWM-441"]._animationPrograms) do
-			table.insert(programNames, programName)
-		end
-		return programNames
+		return getKeysSortedByValue(RGBDeviceTypes["FGRGBWM-441"]._animationPrograms)
 	end,
 
 	_isWatching = false,
@@ -544,7 +574,7 @@ RGBDeviceTypes["FGRGBWM-441"] = {
 				debug("FGRGBWM-441.startAnimationProgram", "Retrieve program id '" .. tostring(programId).. "' from name '" .. tostring(programName) .. "'")
 			end
 		end
-		if (programId > 0) then
+		if ( ( programId > 0) and ( programId < 11 ) ) then
 			debug("FGRGBWM-441.startAnimationProgram", "Start animation program #" .. tostring(programId))
 			-- Z-Wave command class configuration parameters
 			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x48 0x01 0x" .. toHex(programId)}, 1)
@@ -783,6 +813,224 @@ RGBDeviceTypes["AEO_ZW098-C55"] = {
 	end
 }
 
+-- Qubino RGBW dimmer
+RGBDeviceTypes["ZMNHWD1"] = {
+	getParameters = function (lul_device)
+		return {
+			name = "Qubino RGBW dimmer",
+			settings = {
+				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
+			}
+		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite"}
+	end,
+
+	_animationPrograms = {
+		["Ocean"]     = 1,
+		["Lightning"] = 2,
+		["Rainbow"]   = 3,
+		["Snow"]      = 4,
+		["Sun"]       = 5
+	},
+
+	getAnimationProgramNames = function(lul_device)
+		local programNames = {}
+		for programName, programId in pairs(RGBDeviceTypes["ZMNHWD1"]._animationPrograms) do
+			table.insert(programNames, programName)
+		end
+		return programNames
+	end,
+
+	getAnimationParameters = function(lul_device)
+		return { { variable = "programDuration", type = "number" } }
+	end,
+
+	_isWatching = false,
+
+	init = function (lul_device)
+		debug("ZMNHWD1.init", "Init")
+		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
+			return false
+		end
+		pluginParams.initFromSlave = (getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "InitFromSlave", "1") == "1")
+		-- Get color aliases
+		pluginParams.colorAliases = {
+			red   = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasRed",   "e2"),
+			green = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasGreen", "e3"),
+			blue  = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasBlue",  "e4"),
+			warmWhite = getVariableOrInit(lul_device, SID.RGB_CONTROLLER, "AliasWhite", "e5")
+		}
+		if (not RGBDeviceTypes["ZMNHWD1"]._isWatching) then
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasRed", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasGreen", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasBlue", lul_device)
+			luup.variable_watch("initPluginInstance", SID.RGB_CONTROLLER, "AliasWhite", lul_device)
+			RGBDeviceTypes["ZMNHWD1"]._isWatching = true
+		end
+		-- Find dimmer child devices of the Fibaro device
+		pluginParams.rgbChildDeviceIds = {}
+		for deviceId, device in pairs(luup.devices) do
+			if (device.device_num_parent == pluginParams.rgbDeviceId) then
+				local colorAlias = device.id
+				local colorName = nil
+				for name, alias in pairs(pluginParams.colorAliases) do
+					if (alias == colorAlias) then
+						colorName = name
+						break
+					end
+				end
+				--= aliasToColor[ pluginParams.colorAliases[colorName] ]
+				if (colorName ~= nil) then
+					debug("ZMNHWD1.init", "Find child device #" .. tostring(deviceId) .. "(" .. tostring(device.description) .. ") for color " .. tostring(colorName) .. " (alias " .. tostring(colorAlias) .. ")")
+					pluginParams.rgbChildDeviceIds[colorName] = deviceId
+				end
+			end
+		end
+		-- Get color levels and status from the Fibaro device
+		if (pluginParams.initFromSlave) then
+			initColorFromDimmerDevices(lul_device)
+		end
+		return true
+	end,
+
+	setStatus = function (lul_device, newTargetValue)
+		debug("ZMNHWD1.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		RGBDeviceTypes["ZWaveColorDevice"].setStatus(lul_device, newTargetValue)
+	end,
+
+	setColor = function (lul_device, color)
+		debug("ZMNHWD1.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
+		RGBDeviceTypes.ZWaveColorDevice.setColor(lul_device, color)
+	end,
+
+	startAnimationProgram = function (lul_device, programId, programName, programDuration)
+		local programId = tonumber(programId) or 0
+		if (programName ~= nil) then
+			programId = RGBDeviceTypes["ZMNHWD1"]._animationPrograms[programName] or 0
+			if (programId > 0) then
+				debug("ZMNHWD1.startAnimationProgram", "Retrieve program id '" .. tostring(programId).. "' from name '" .. tostring(programName) .. "'")
+			end
+		end
+		if ( ( programId > 0) and ( programId < 6 ) ) then
+			local programDuration = tonumber(programDuration) or 0
+			if ( programDuration > 127 ) then
+				-- Convert seconds into minutes
+				programDuration = math.min( math.ceil( programDuration / 60 ), 128 )
+				debug( "ZMNHWD1.startAnimationProgram", "Start animation program #" .. tostring( programId ) .. ", duration: " .. tostring(programDuration) .. "min" )
+				programDuration = programDuration + 127
+			else
+				debug( "ZMNHWD1.startAnimationProgram", "Start animation program #" .. tostring( programId ) .. ", duration: " .. tostring(programDuration) .. "s" )
+			end
+			debug("ZMNHWD1.startAnimationProgram", "Start animation program #" .. tostring(programId))
+			-- Z-Wave command class configuration parameters
+			if ( programDuration > 0 ) then
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x04 0x01 0x" .. toHex( programDuration )}, 1)
+			end
+			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x70 0x04 0x03 0x01 0x" .. toHex( programId )}, 1)
+			if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
+				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			end
+		else
+			debug("ZMNHWD1.startAnimationProgram", "Stop animation program")
+			setColorTarget(lul_device, "")
+		end
+	end
+}
+
+-- Sunricher RGBW Controller
+RGBDeviceTypes["SR-ZV9103FA-RGBW"] = {
+	getParameters = function (lul_device)
+		return {
+			name = "Sunricher RGBW Controller",
+			settings = {
+				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
+			}
+		}
+	end,
+
+	getColorChannelNames = function (lul_device)
+		return {"red", "green", "blue", "warmWhite", "coolWhite"}
+	end,
+
+	_animationPrograms = {
+		["Quick flash rotating R-G-B"] = 1,
+		["Quick flash R"] = 2,
+		["Quick flash G"] = 3,
+		["Quick flash B"] = 4,
+		["Quick flash R+G"] = 5,
+		["Quick flash G+B"] = 6,
+		["Quick flash B+R"] = 7,
+		["Quick flash R+G+B"] = 8,
+		["Stepped rotation R-G-B"] = 9,
+		["Fading rotation R-G-B"] = 10,
+		["Fading up/down R"] = 11,
+		["Fading up/down G"] = 12,
+		["Fading up/down B"] = 13,
+		["Fading up/down R+G"] = 14,
+		["Fading up/down G+B"] = 15,
+		["Fading up/down B+R"] = 16,
+		["Fading up/down R+B+G"] = 17,
+		["Fading up/down swap R-G"] = 18,
+		["Fading up/down swap B-R"] = 19,
+		["Fading up/down swap G-B"] = 20
+	},
+
+	getAnimationProgramNames = function(lul_device)
+		return getKeysSortedByValue(RGBDeviceTypes["SR-ZV9103FA-RGBW"]._animationPrograms)
+	end,
+
+	getAnimationParameters = function(lul_device)
+		return { { variable = "programSpeed", type = "number", min = 1, max = 23 } }
+	end,
+
+	init = function (lul_device)
+		debug("SR-ZV9103FA-RGBW.init", "Init for device #" .. tostring(lul_device))
+		if (not RGBDeviceTypes["ZWaveColorDevice"].init(lul_device)) then
+			return false
+		end
+		return true
+	end,
+
+	setStatus = function (lul_device, newTargetValue)
+		debug("SR-ZV9103FA-RGBW.setStatus", "Set status '" .. tostring(newTargetValue) .. "' for device #" .. tostring(lul_device))
+		RGBDeviceTypes["ZWaveColorDevice"].setStatus(lul_device, newTargetValue)
+	end,
+
+	setColor = function (lul_device, color)
+		debug("SR-ZV9103FA-RGBW.setColor", "Set RGBW color #" .. tostring(color) .. " for device #" .. tostring(lul_device))
+		-- RGB colors and cold white can not work together
+		RGBDeviceTypes["ZWaveColorDevice"].setColor(lul_device, color)
+	end,
+
+	startAnimationProgram = function (lul_device, programId, programName, programDuration, programSpeed)
+		local programId = tonumber(programId) or 0
+		if (programName ~= nil) then
+			programId = RGBDeviceTypes["SR-ZV9103FA-RGBW"]._animationPrograms[programName] or 0
+			if (programId > 0) then
+				debug("SR-ZV9103FA-RGBW.startAnimationProgram", "Retrieve program id '" .. tostring(programId).. "' from name '" .. tostring(programName) .. "'")
+			end
+		end
+		if ( ( programId > 0) and ( programId < 21 ) ) then
+			debug("SR-ZV9103FA-RGBW.startAnimationProgram", "Start animation program #" .. tostring(programId))
+			-- Z-Wave command class configuration parameters
+			luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x33 0x05 0x01 0x08 0x" .. toHex(programId)}, 1)
+			local programSpeed = tonumber(programSpeed) or 0
+			if ( ( programSpeed > 0) and ( programSpeed < 33 ) ) then
+				debug("SR-ZV9103FA-RGBW.startAnimationProgram", "Set speed to " .. tostring(programSpeed))
+				luup.call_action(SID.ZWAVE_NETWORK, "SendData", {Node = pluginParams.rgbZwaveNode, Data = "0x33 0x05 0x01 0x08 0x" .. toHex(programSpeed + 199)}, 1)
+			end
+			if (luup.variable_get(SID.SWITCH, "Status", lul_device) == "0") then
+				luup.variable_set(SID.SWITCH, "Status", "1", lul_device)
+			end
+		else
+			debug("SR-ZV9103FA-RGBW.startAnimationProgram", "Stop animation program")
+			setColorTarget(lul_device, "")
+		end
+	end
+}
 -- Hyperion Remote
 -- See : https://github.com/tvdzwan/hyperion/wiki
 RGBDeviceTypes["HYPERION"] = {
@@ -900,8 +1148,7 @@ RGBDeviceTypes["HYPERION"] = {
 			RGBDeviceTypes["HYPERION"]._sendCommand(lul_device, {
 				command = "effect",
 				effect = {
-					name = programName--,
-					--args = {}
+					name = programName
 				},
 				priority = 1001
 			})
@@ -1143,29 +1390,32 @@ function getColor (lul_device)
 end
 
 -- Start animation program
-function startAnimationProgram (lul_device, programId, programName)
-	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName))
+function startAnimationProgram (lul_device, programId, programName, programDuration)
+	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName) .. ", duration: " .. tostring(programDuration))
 	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 	elseif (type(RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram) == "function") then
-		RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName)
+		RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName, programDuration)
 	else
 		debug(pluginParams.rgbDeviceType .. ".startAnimationProgram", "Not implemented")
 	end
 end
 
--- Get animation program names
-function getAnimationProgramNames (lul_device)
+-- Get animation programs
+function getAnimationPrograms (lul_device)
 	debug("getAnimationProgramList", "Get animation program names")
-	local programNames = {}
+	local programs = { names = {} }
 	if (not pluginParams.isConfigured) then
 		debug("getAnimationProgramNames", "Device not initialized")
 	elseif (type(RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames) == "function") then
-		programNames = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames(lul_device)
+		programs.names = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationProgramNames(lul_device)
+		if (type(RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationParameters) == "function") then
+			programs.parameters = RGBDeviceTypes[pluginParams.rgbDeviceType].getAnimationParameters(lul_device)
+		end
 	else
 		debug(pluginParams.rgbDeviceType .. ".getAnimationProgramList", "Not implemented")
 	end
-	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programNames), lul_device)
+	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(programs), lul_device)
 end
 
 -- Get supported color channel names
@@ -1185,8 +1435,11 @@ function getRGBDeviceTypes (lul_device)
 	debug("getRGBDeviceTypes", "Get RGB device types")
 	local RGBDeviceTypesParameters = {}
 	for typeName, RGBDeviceType in pairs(RGBDeviceTypes) do
-		RGBDeviceTypesParameters[typeName] = RGBDeviceType.getParameters(lul_device)
+		local params = RGBDeviceType.getParameters(lul_device)
+		params.type = typeName
+		table.insert(RGBDeviceTypesParameters, params)
 	end
+	table.sort(RGBDeviceTypesParameters, function(a, b) return a.type < b.type end)
 	luup.variable_set(SID.RGB_CONTROLLER, "LastResult", json.encode(RGBDeviceTypesParameters), lul_device)
 end
 

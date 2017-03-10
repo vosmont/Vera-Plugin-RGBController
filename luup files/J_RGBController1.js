@@ -211,10 +211,10 @@ var RGBController = (function (api, $) {
 				myInterface.showModalLoading();
 				$.when(
 					getColorChannelNames(_deviceId),
-					getAnimationProgramNames(_deviceId)
+					getAnimationPrograms(_deviceId)
 				).then(
-					function (channelNames, programNames) {
-						drawAndManageColorWheel(_deviceId, _rgbDeviceType, _color, channelNames, programNames);
+					function (channelNames, programs) {
+						drawAndManageColorWheel(_deviceId, _rgbDeviceType, _color, channelNames, programs);
 						myInterface.hideModalLoading();
 					},
 					function (response) {
@@ -279,7 +279,7 @@ var RGBController = (function (api, $) {
 	/**
 	 * Draw and manage the color wheel
 	 */
-	function drawAndManageColorWheel (deviceId, rgbDeviceType, color, channelNames, programNames) {
+	function drawAndManageColorWheel (deviceId, rgbDeviceType, color, channelNames, programs) {
 		var lastSendDate = +new Date();
 		var sendTimer = 0;
 		_color = color;
@@ -308,12 +308,12 @@ var RGBController = (function (api, $) {
 			+	'</div>';
 
 		// Animations
-		if (programNames.length > 0) {
+		if (programs.names.length > 0) {
 			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
 			+		'<select id="RGBController_programs" class="ui-widget-content">'
 			+			'<option value="" selected="selected">&lt;Animation&gt;</option>';
-			for (i = 0; i < programNames.length; i++) {
-				html += '<option value="' + programNames[i] + '">' + programNames[i] + '</option>';
+			for (i = 0; i < programs.names.length; i++) {
+				html += '<option value="' + programs.names[i] + '">' + programs.names[i] + '</option>';
 			}
 			html += '</select>'
 			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
@@ -532,8 +532,10 @@ var RGBController = (function (api, $) {
 							+			'<span>Device type</span>'
 							+			'<select id="RGBController_deviceTypeSelect" class="RGBController_settingValue" data-variable="DeviceType">'
 							+				'<option value="">-- Select a type --</option>';
-					$.each(rgbDeviceTypes, function (typeName, data) {
-						html +=				'<option value="' + typeName + '"' + (typeName === rgbDeviceType ? ' selected' : '') + '>' + data.name + '</option>';
+					var indexTypes = {};
+					$.each(rgbDeviceTypes, function (i, data) {
+						indexTypes[data.type] = data;
+						html +=				'<option value="' + data.type + '"' + (data.type === rgbDeviceType ? ' selected' : '') + '>' + data.name + '</option>';
 					});
 					html +=				'</select>'
 							+		'</div>'
@@ -556,13 +558,13 @@ var RGBController = (function (api, $) {
 
 					$("#RGBController_deviceTypeSelect").change(function () {
 						var selectedRgbDeviceType = $(this).val();
-						if (typeof rgbDeviceTypes[selectedRgbDeviceType] != "undefined") {
-							drawSpecificSettings(deviceId, selectedRgbDeviceType, rgbDeviceTypes[selectedRgbDeviceType].settings);
+						if (typeof indexTypes[selectedRgbDeviceType] != "undefined") {
+							drawSpecificSettings(deviceId, selectedRgbDeviceType, indexTypes[selectedRgbDeviceType].settings);
 						}
 					});
 
-					if (typeof rgbDeviceTypes[rgbDeviceType] != "undefined") {
-						drawSpecificSettings(deviceId, rgbDeviceType, rgbDeviceTypes[rgbDeviceType].settings);
+					if (typeof indexTypes[rgbDeviceType] != "undefined") {
+						drawSpecificSettings(deviceId, rgbDeviceType, indexTypes[rgbDeviceType].settings);
 					}
 
 					myInterface.hideModalLoading();
@@ -634,7 +636,7 @@ var RGBController = (function (api, $) {
 				}
 				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetRGBDeviceTypesResponse"])) {
 					var rgbDeviceTypes = $.parseJSON(jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
-					if ($.isPlainObject(rgbDeviceTypes)) {
+					if ($.isArray(rgbDeviceTypes)) {
 						Utils.logDebug("[RGBController.getRgbDeviceTypes] OK - rgbDeviceTypes: " + jsonResponse["u:GetRGBDeviceTypesResponse"].retRGBDeviceTypes);
 						dfd.resolve(rgbDeviceTypes);
 						return;
@@ -712,9 +714,9 @@ var RGBController = (function (api, $) {
 	/**
 	 * Get animation program names
 	 */
-	function getAnimationProgramNames (deviceId, options) {
+	function getAnimationPrograms (deviceId, options) {
 		var dfd = $.Deferred();
-		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetAnimationProgramNames", {
+		api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "GetAnimationPrograms", {
 			actionArguments: {
 				output_format: "json"
 			},
@@ -723,21 +725,21 @@ var RGBController = (function (api, $) {
 				try {
 					jsonResponse = $.parseJSON(response.responseText);
 				} catch (err) {
-					Utils.logError('[RGBController.getAnimationProgramNames] Parse JSON error: ' + err);
+					Utils.logError('[RGBController.getAnimationPrograms] Parse JSON error: ' + err);
 				}
-				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramNamesResponse"])) {
-					var programNames = $.parseJSON(jsonResponse["u:GetAnimationProgramNamesResponse"].retAnimationProgramNames);
-					if ($.isArray(programNames)) {
-						Utils.logDebug("[RGBController.getAnimationProgramNames] OK - programNames: " + programNames);
-						dfd.resolve(programNames);
+				if ($.isPlainObject(jsonResponse) && $.isPlainObject(jsonResponse["u:GetAnimationProgramsResponse"])) {
+					var programs = $.parseJSON(jsonResponse["u:GetAnimationProgramsResponse"].retAnimationPrograms);
+					if ($.isPlainObject(programs)) {
+						Utils.logDebug("[RGBController.getAnimationPrograms] OK - programs: " + programs);
+						dfd.resolve(programs);
 						return;
 					}
 				}
-				Utils.logError("[RGBController.getAnimationProgramNames] KO - response: " + response.responseText);
+				Utils.logError("[RGBController.getAnimationPrograms] KO - response: " + response.responseText);
 				dfd.reject(response);
 			},
 			onFailure: function (response) {
-				Utils.logError("[RGBController.getAnimationProgramNames] performActionOnDevice failure");
+				Utils.logError("[RGBController.getAnimationPrograms] performActionOnDevice failure");
 				dfd.reject(response);
 			}
 		});

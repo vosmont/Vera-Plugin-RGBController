@@ -96,7 +96,7 @@
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
 			<name>StartAnimationProgram</name>
 			<job>
-				startAnimationProgram(lul_device, lul_settings.programId, lul_settings.programName)
+				startAnimationProgram(lul_device, lul_settings.programId, lul_settings.programName, lul_settings.programDuration, lul_settings.programSpeed)
 				return 4, nil
 			</job>
 		</action>
@@ -110,9 +110,9 @@
 		</action>
 		<action>
 			<serviceId>urn:upnp-org:serviceId:RGBController1</serviceId>
-			<name>GetAnimationProgramNames</name>
+			<name>GetAnimationPrograms</name>
 			<run>
-				getAnimationProgramNames(lul_device)
+				getAnimationPrograms(lul_device)
 			</run>
 		</action>
 	</actionList>
