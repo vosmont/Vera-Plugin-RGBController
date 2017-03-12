@@ -105,7 +105,7 @@ var RGBController = (function (api, $) {
 		}
 		pluginStyle
 			.html("\
-				#RGBController_controls { width: 400px; margin: 20px auto; }\
+				#RGBController_controls { width: 430px; margin: 20px auto; }\
 				#RGBController_colorpicker { display: inline-block; margin-right: 10px; }\
 				#RGBController_sliders { display: inline-block; margin-left: 50px; } \
 				#RGBController_sliders .ui-slider { display: inline-block; height: 180px; width: 19px; margin-left: 10px; }\
@@ -128,11 +128,11 @@ var RGBController = (function (api, $) {
 				#RGBController_swatch button { height:23px; width:40px; }\
 				#RGBController_swatch input { width:40px; height:23px; text-align:center; }\
 				#RGBController_program { height: 25px; margin-top: 10px; border-radius: 25px; padding: 0px 25px; text-align: center; }\
-				#RGBController_programs { width:60%; height:23px; }\
+				#RGBController_programs { /*width:60%*/; height:23px; }\
 				#RGBController_settings { width:80%; margin: 20px auto; }\
-				#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 1px 25px; text-align: left; }\
+				#RGBController_settings .RGBController_setting { margin-top: 10px; border-radius: 25px; padding: 1px 5px; text-align: left; }\
 				#RGBController_settings .RGBController_setting span { display: inline-block; width: 30%; }\
-				#RGBController_settings .RGBController_setting select { width: 70%; }\
+				#RGBController_settings .RGBController_setting select { /*width: 70%;*/ }\
 				#RGBController_settings .RGBController_setting input { width: 69%; }\
 				#RGBController_specificSettings .RGBController_setting { background: #FBA01C !important; }\
 				#RGBController_saveSettings { text-align: center !important; }\
@@ -308,15 +308,20 @@ var RGBController = (function (api, $) {
 			+	'</div>';
 
 		// Animations
-		if (programs.names.length > 0) {
+		if ( programs.names && ( programs.names.length > 0 ) ) {
 			html += '<div id="RGBController_program" class="ui-widget-content ui-corner-all">'
 			+		'<select id="RGBController_programs" class="ui-widget-content">'
 			+			'<option value="" selected="selected">&lt;Animation&gt;</option>';
-			for (i = 0; i < programs.names.length; i++) {
-				html += '<option value="' + programs.names[i] + '">' + programs.names[i] + '</option>';
+			$.each( programs.names, function( i, name ) {
+				html += '<option value="' + name + '">' + name + '</option>';
+			});
+			html += '</select>';
+			if ( programs.parameters && ( programs.parameters.length > 0 ) ) {
+				$.each( programs.parameters, function( i, parameter ) {
+					html +=	'<input type="text" id="RGBController_' + parameter.variable + '" class="ui-widget-content" title="' + parameter.title + '" placeholder="' + parameter.placeholder + '">';
+				});
 			}
-			html += '</select>'
-			+		'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
+			html +=	'<button id="RGBController_program_start" class="ui-widget-content">Start</button>'
 			+		'<button id="RGBController_program_stop" class="ui-widget-content">Stop</button>'
 			+	'</div>';
 		}
@@ -380,7 +385,9 @@ var RGBController = (function (api, $) {
 		$("#RGBController_program_start")
 			.click(function (event) {
 				var programName = $("#RGBController_programs").val();
-				startAnimationProgram(deviceId, programName);
+				var programDuration = $("#RGBController_programDuration").val();
+				var programSpeed = $("#RGBController_programSpeed").val();
+				startAnimationProgram(deviceId, programName, programDuration, programSpeed);
 			});
 		$("#RGBController_program_stop")
 			.click(function (event) {
@@ -749,13 +756,15 @@ var RGBController = (function (api, $) {
 	/**
 	 * Start animation program
 	 */
-	function startAnimationProgram (deviceId, programName) {
+	function startAnimationProgram (deviceId, programName, programDuration, programSpeed) {
 		try {
 			Utils.logDebug("[RGBController.startAnimationProgram] Start program '" + programName + "' for device " + deviceId);
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "StartAnimationProgram", {
 				actionArguments: {
 					output_format: "json",
-					programName: programName
+					programName: programName,
+					programDuration: (programDuration ? programDuration : ""),
+					programSpeed: (programSpeed ? programSpeed : "")
 				},
 				onSuccess: function (response) {
 					Utils.logDebug("[RGBController.startAnimationProgram] OK");

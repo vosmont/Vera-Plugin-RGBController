@@ -28,7 +28,7 @@ local SID = {
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.40"
+local PLUGIN_VERSION = "1.41"
 local DEBUG_MODE = false
 
 -------------------------------------------
@@ -845,7 +845,7 @@ RGBDeviceTypes["ZMNHWD1"] = {
 	end,
 
 	getAnimationParameters = function(lul_device)
-		return { { variable = "programDuration", type = "number" } }
+		return { { variable = "programDuration", type = "number", placeholder = "duration (in s)", title = "Animation duration" } }
 	end,
 
 	_isWatching = false,
@@ -983,7 +983,7 @@ RGBDeviceTypes["SR-ZV9103FA-RGBW"] = {
 	end,
 
 	getAnimationParameters = function(lul_device)
-		return { { variable = "programSpeed", type = "number", min = 1, max = 23 } }
+		return { { variable = "programSpeed", type = "number", placeholder = "speed [1-23]", title = "Animation speed" } }
 	end,
 
 	init = function (lul_device)
@@ -1390,12 +1390,12 @@ function getColor (lul_device)
 end
 
 -- Start animation program
-function startAnimationProgram (lul_device, programId, programName, programDuration)
-	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName) .. ", duration: " .. tostring(programDuration))
+function startAnimationProgram (lul_device, programId, programName, programDuration, programSpeed)
+	debug("startAnimationProgram", "Start animation program id: " .. tostring(programId) .. ", name: " .. tostring(programName) .. ", duration: " .. tostring(programDuration) .. ", speed: " .. tostring(programSpeed))
 	if (not pluginParams.isConfigured) then
 		debug("setTarget", "Device not initialized")
 	elseif (type(RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram) == "function") then
-		RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName, programDuration)
+		RGBDeviceTypes[pluginParams.rgbDeviceType].startAnimationProgram(lul_device, programId, programName, programDuration, programSpeed)
 	else
 		debug(pluginParams.rgbDeviceType .. ".startAnimationProgram", "Not implemented")
 	end
