@@ -28,7 +28,7 @@ local SID = {
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.42"
+local PLUGIN_VERSION = "1.43"
 local DEBUG_MODE = false
 
 -------------------------------------------
@@ -952,30 +952,30 @@ RGBDeviceTypes["SR-ZV9103FA-RGBW"] = {
 	end,
 
 	getColorChannelNames = function (lul_device)
-		return {"red", "green", "blue", "warmWhite", "coolWhite"}
+		return {"red", "green", "blue", "warmWhite" }
 	end,
 
 	_animationPrograms = {
-		["Quick flash rotating R-G-B"] = 1,
-		["Quick flash R"] = 2,
-		["Quick flash G"] = 3,
-		["Quick flash B"] = 4,
-		["Quick flash R+G"] = 5,
-		["Quick flash G+B"] = 6,
-		["Quick flash B+R"] = 7,
-		["Quick flash R+G+B"] = 8,
-		["Stepped rotation R-G-B"] = 9,
-		["Fading rotation R-G-B"] = 10,
-		["Fading up/down R"] = 11,
-		["Fading up/down G"] = 12,
-		["Fading up/down B"] = 13,
-		["Fading up/down R+G"] = 14,
-		["Fading up/down G+B"] = 15,
-		["Fading up/down B+R"] = 16,
-		["Fading up/down R+B+G"] = 17,
-		["Fading up/down swap R-G"] = 18,
-		["Fading up/down swap B-R"] = 19,
-		["Fading up/down swap G-B"] = 20
+		["Fading rotation R-G-B"] = 1,
+		["Fading up/down R"] = 2,
+		["Fading up/down G"] = 3,
+		["Fading up/down B"] = 4,
+		["Fading up/down R+G"] = 5,
+		["Fading up/down G+B"] = 6,
+		["Fading up/down B+R"] = 7,
+		["Fading up/down R+B+G"] = 8,
+		["Fading up/down swap R-G"] = 9,
+		["Fading up/down swap B-R"] = 10,
+		["Fading up/down swap G-B"] = 11,
+		["Quick flash rotating R-G-B"] = 12,
+		["Quick flash R"] = 13,
+		["Quick flash G"] = 14,
+		["Quick flash B"] = 15,
+		["Quick flash R+G"] = 16,
+		["Quick flash G+B"] = 17,
+		["Quick flash B+R"] = 18,
+		["Quick flash R+G+B"] = 19,
+		["Stepped rotation R-G-B"] = 20
 	},
 
 	getAnimationProgramNames = function(lul_device)
@@ -1031,6 +1031,7 @@ RGBDeviceTypes["SR-ZV9103FA-RGBW"] = {
 		end
 	end
 }
+
 -- Hyperion Remote
 -- See : https://github.com/tvdzwan/hyperion/wiki
 RGBDeviceTypes["HYPERION"] = {

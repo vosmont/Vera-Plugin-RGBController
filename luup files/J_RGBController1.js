@@ -762,7 +762,7 @@ var RGBController = (function (api, $) {
 			api.performActionOnDevice(deviceId, RGB_CONTROLLER_SID, "StartAnimationProgram", {
 				actionArguments: {
 					output_format: "json",
-					programName: programName,
+					programName: encodeURIComponent( programName ),
 					programDuration: (programDuration ? programDuration : ""),
 					programSpeed: (programSpeed ? programSpeed : "")
 				},
