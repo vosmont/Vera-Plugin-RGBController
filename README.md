@@ -8,17 +8,14 @@ Manage RGBW color channels and animation programs of Z-wave devices.
 Designed for [Vera Control, Ltd.](http://getvera.com/) Home Controllers.
 
 Compatible with
-- Fibaro FGRGB-101 (FGRGBWM-441)
-- Zipato RGBW Bulb
 - Aeotec RGBW Bulb
+- Fibaro FGRGB-101
+- Qubino RGBW dimmer
+- Sunricher RGBW Controller
+- Zipato RGBW Bulb
+- All Z-Wave device which supports COLOR COMMAND CLASS
 - Hyperion (https://github.com/tvdzwan/hyperion/wiki)
 
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
 <br/>
 <br/>
 
