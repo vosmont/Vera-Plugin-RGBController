@@ -28,7 +28,7 @@ local SID = {
 -------------------------------------------
 
 local PLUGIN_NAME = "RGBController"
-local PLUGIN_VERSION = "1.41"
+local PLUGIN_VERSION = "1.42"
 local DEBUG_MODE = false
 
 -------------------------------------------
@@ -386,7 +386,7 @@ setmetatable(RGBDeviceTypes,{
 RGBDeviceTypes["ZWaveColorDevice"] = {
 	getParameters = function (lul_device)
 		return {
-			name = "_Generic Z-Wave color device",
+			name = "* Generic Z-Wave color device",
 			settings = {
 				{ variable = "DeviceId", name = "Controlled device", type = "ZWaveColorDevice" }
 			}
@@ -435,7 +435,7 @@ RGBDeviceTypes["ZWaveColorDevice"] = {
 			local loadLevel = luup.variable_get( SID.RGB_CONTROLLER, "LoadLevelStatus", lul_device )
 			if loadLevel then
 				debug( lul_device, self, "setStatus", "Set former loal level '" .. tostring( loadLevel ) .. "'" )
-				luup.call_action( SID.DIMMER, "SetLoadLevelTarget", { newLoadlevelTarget = loadLevel }, instanceParams.rgbDeviceId )
+				luup.call_action( SID.DIMMER, "SetLoadLevelTarget", { newLoadlevelTarget = loadLevel }, pluginParams.rgbDeviceId )
 			else
 				debug("ZWaveColorDevice.setStatus", "Switches on")
 				luup.call_action(SID.SWITCH, "SetTarget", {newTargetValue = "1"}, pluginParams.rgbDeviceId)
