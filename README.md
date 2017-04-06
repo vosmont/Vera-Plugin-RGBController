@@ -4,8 +4,7 @@ Manage RGBW color channels and animation programs of Z-wave devices.
 
 <br/>
 
-<img align="left" src="media/rgbcontroller_panel.png">
-Designed for [Vera Control, Ltd.](http://getvera.com/) Home Controllers.
+<img align="left" src="media/rgbcontroller_panel.png"> Designed for [Vera Control, Ltd.](http://getvera.com/) Home Controllers.
 
 Compatible with
 - Aeotec RGBW Bulb
