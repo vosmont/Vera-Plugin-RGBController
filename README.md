@@ -34,14 +34,14 @@ In the "Settings" tab, select the type of the the device you want to control.
 
 Then select its specific settings (the Z-Wave rgb device or server ip/port)
 
-**Just UI5**: There's no JSON decoder installed by default.
-If you have the error "No JSON decoder", you have to upload the library in "/usr/lib/lua". You can take "json.lua" or "dkjson.lua".
-You will find "json.lua" here : http://code.mios.com/trac/mios_genericutils/export/20/json.lua
-
-This code can be executed in "Apps->Develop apps->Test Luup code (Lua)"
-```
-os.execute("wget -q -O /usr/lib/lua/json.lua http://code.mios.com/trac/mios_genericutils/export/20/json.lua")
-```
+> **Just UI5**: There's no JSON decoder installed by default.
+> If you have the error "No JSON decoder", you have to upload the library in "/usr/lib/lua". You can take "json.lua" or "dkjson.lua".
+> You will find "json.lua" here : http://code.mios.com/trac/mios_genericutils/export/20/json.lua
+>
+> This code can be executed in "Apps->Develop apps->Test Luup code (Lua)"
+> ```
+> os.execute("wget -q -O /usr/lib/lua/json.lua http://code.mios.com/trac/mios_genericutils/export/20/json.lua")
+> ```
 
 
 ## Usage
