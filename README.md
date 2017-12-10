@@ -4,7 +4,7 @@
 
 <br/>
 
-<img align="left" src="media/rgbcontroller_panel.png"> Designed for [Vera Control, Ltd.](http://getvera.com/) Home Controllers.
+<img align="left" src="media/rgbcontroller_panel.png">
 
 Compatible with
 - Aeotec RGBW Bulb
@@ -15,6 +15,8 @@ Compatible with
 - All Z-Wave device which supports COLOR COMMAND CLASS
 - Hyperion (https://github.com/tvdzwan/hyperion/wiki)
 
+<br/>
+<br/>
 <br/>
 <br/>
 <br/>
