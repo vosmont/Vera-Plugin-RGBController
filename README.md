@@ -1,6 +1,6 @@
 # <img align="left" src="media/rgbcontroller_logo.png"> Vera-Plugin-RGBController
 
-Manage RGBW color channels and animation programs of Z-wave devices.
+**Manage RGBW color channels and animation programs of Z-wave devices**
 
 <br/>
 
@@ -19,11 +19,7 @@ Compatible with
 <br/>
 <br/>
 
-**Compatible with UI5 & UI7 / VeraPlus, VeraEdge, Vera3, VeraLite / [openLuup](https://github.com/akbooer/openLuup)**
-
-More informations here :
-- http://forum.micasaverde.com/index.php/topic,32613.0.html
-- http://www.touteladomotique.com/forum/viewtopic.php?f=48&t=14736 (in French)
+Designed for [Vera Control, Ltd.](http://getvera.com) Home Controllers (UI5 & UI7) and [openLuup](https://github.com/akbooer/openLuup).
 
 
 ## Installation
@@ -119,3 +115,9 @@ tail -f /var/log/cmh/LuaUPnP.log | grep "^01\|RGBController"
 - a merge of Farbtastic with jQueryUI sliders
 
   http://www.emanueleferonato.com/2011/03/22/jquery-color-picker-using-farbtastic-and-jquery-ui/
+
+
+## Forums
+
+- http://forum.micasaverde.com/index.php/topic,32613.0.html
+- http://www.touteladomotique.com/forum/viewtopic.php?f=48&t=14736 (in French)
