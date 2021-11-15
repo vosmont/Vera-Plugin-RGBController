@@ -1,3 +1,6 @@
+**This plugin is no longer maintained**
+
+
 # <img align="left" src="media/rgbcontroller_logo.png"> Vera-Plugin-RGBController
 
 **Manage RGBW color channels and animation programs of Z-wave devices**
